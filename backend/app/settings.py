@@ -7,7 +7,7 @@ SECRET_KEY = "django-insecure-replace-me-with-a-secure-key"
 
 DEBUG = True
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "backend", "*"]
 
 INSTALLED_APPS = [
     "corsheaders",
@@ -31,7 +31,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = "app_skeleton.urls"
+ROOT_URLCONF = "app.urls"
 
 TEMPLATES = [
     {
@@ -49,12 +49,16 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "app_skeleton.wsgi.application"
+WSGI_APPLICATION = "app.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("DB_NAME", "statsig_db"),
+        "USER": os.getenv("DB_USER", "postgres"),
+        "PASSWORD": os.getenv("DB_PASSWORD", "postgres"),
+        "HOST": os.getenv("DB_HOST", "localhost"),
+        "PORT": os.getenv("DB_PORT", "5432"),
     }
 }
 

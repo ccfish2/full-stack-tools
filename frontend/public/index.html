@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Statsig Application</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        padding: 40px;
+        max-width: 500px;
+        width: 100%;
+      }
+
+      h1 {
+        color: #333;
+        margin-bottom: 30px;
+        text-align: center;
+        font-size: 28px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        color: #555;
+        font-weight: 600;
+        font-size: 14px;
+      }
+
+      input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 5px;
+        font-size: 16px;
+        transition: border-color 0.3s;
+      }
+
+      input:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      button {
+        width: 100%;
+        padding: 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      .response {
+        margin-top: 30px;
+        padding: 20px;
+        background: #f5f5f5;
+        border-radius: 5px;
+        display: none;
+      }
+
+      .response.show {
+        display: block;
+      }
+
+      .response.success {
+        background: #e8f5e9;
+        border-left: 4px solid #4caf50;
+      }
+
+      .response.error {
+        background: #ffebee;
+        border-left: 4px solid #f44336;
+      }
+
+      .response h3 {
+        margin-bottom: 10px;
+        color: #333;
+        font-size: 16px;
+      }
+
+      .response p {
+        color: #666;
+        font-size: 14px;
+        line-height: 1.6;
+        word-break: break-all;
+        font-family: "Courier New", monospace;
+      }
+
+      .loading {
+        display: none;
+        text-align: center;
+        margin-top: 15px;
+      }
+
+      .loading.show {
+        display: block;
+      }
+
+      .spinner {
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #667eea;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .header-info {
+        background: #f0f4ff;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        font-size: 12px;
+        color: #666;
+        text-align: center;
+      }
+
+      .header-info strong {
+        color: #667eea;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>📊 Statsig Application</h1>
+
+      <div class="header-info">
+        <strong>Frontend running on port 9090</strong> <br />
+        Connected to Django Backend
+      </div>
+
+      <form id="statsigForm">
+        <div class="form-group">
+          <label for="key">Key *</label>
+          <input
+            type="text"
+            id="key"
+            name="key"
+            placeholder='e.g., "feature_flag_1"'
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="key2">Value *</label>
+          <input
+            type="text"
+            id="key2"
+            name="key2"
+            placeholder='e.g., "enabled"'
+            required
+          />
+        </div>
+
+        <button type="submit">Submit to Backend</button>
+      </form>
+
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p style="margin-top: 10px">Sending data...</p>
+      </div>
+
+      <div class="response" id="response"></div>
+    </div>
+
+    <script>
+      const form = document.getElementById("statsigForm");
+      const responseDiv = document.getElementById("response");
+      const loadingDiv = document.getElementById("loading");
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const key = document.getElementById("key").value;
+        const key2 = document.getElementById("key2").value;
+
+        // Show loading
+        loadingDiv.classList.add("show");
+        responseDiv.classList.remove("show");
+
+        try {
+          const response = await fetch("/api/submit", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ key, key2 }),
+          });
+
+          const data = await response.json();
+
+          loadingDiv.classList.remove("show");
+
+          if (response.ok) {
+            responseDiv.className = "response show success";
+            responseDiv.innerHTML = `
+              <h3>✅ Success!</h3>
+              <p><strong>Status:</strong> ${data.status}</p>
+              <p><strong>Response:</strong></p>
+              <p>${JSON.stringify(data, null, 2)}</p>
+            `;
+            form.reset();
+          } else {
+            responseDiv.className = "response show error";
+            responseDiv.innerHTML = `
+              <h3>❌ Error</h3>
+              <p><strong>Message:</strong> ${data.message}</p>
+            `;
+          }
+        } catch (error) {
+          loadingDiv.classList.remove("show");
+          responseDiv.className = "response show error";
+          responseDiv.innerHTML = `
+            <h3>❌ Connection Error</h3>
+            <p><strong>Message:</strong> ${error instanceof Error ? error.message : String(error)}</p>
+            <p><strong>Tip:</strong> Make sure the backend server is running</p>
+          `;
+        }
+      });
+
+      // Test connection on page load
+      window.addEventListener("load", async () => {
+        try {
+          const response = await fetch("/api/data");
+          const data = await response.json();
+          console.log("✅ Frontend connected to backend:", data);
+        } catch (error) {
+          console.error("❌ Connection error:", error);
+        }
+      });
+    </script>
+  </body>
+</html>
