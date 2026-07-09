@@ -99,17 +99,18 @@ REST_FRAMEWORK = {
 }
 
 #CELERY_BROKER_URL= "redis://localhost:6379/0"
-CELERY_RESULT_BACKEND="redis://localhost:6379/0"
+#CELERY_RESULT_BACKEND="redis://localhost:6379/0"
 CELERY_BROKER_URL = f"redis://{os.environ.get('REDIS_HOST', 'localhost')}:6379/0"
+CELERY_RESULT_BACKEND= f"redis://{os.environ.get('REDIS_HOST', 'localhost')}:6379/0"
 
 EVENTSTREAM_REDIS = {
-    "host": "localhost",
+    "host": os.environ.get('REDIS_HOST', 'localhost'),
     "port": 6379,
     "db": 0,
 }
 
 EVENTSTREAM_STORAGE_CLASS = "django_eventstream.storage.RedisStorage"
 EVENTSTREAM_STORAGE_CONNECTION = {
-    "host": "localhost",
+    "host": os.environ.get('REDIS_HOST', 'localhost'),
     "port": 6379,
 }
