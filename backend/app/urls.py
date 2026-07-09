@@ -7,7 +7,7 @@ import django_eventstream
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api_auth/", include("rest_framework.urls")),
-    path("/api/event", django_eventstream.views.events, {"channels":["global"]}),
+    path("api/event", django_eventstream.views.events, {"channels":["global"]}),
 ]
 
 router = DefaultRouter(trailing_slash=False)
