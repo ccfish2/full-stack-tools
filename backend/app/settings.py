@@ -95,4 +95,5 @@ REST_FRAMEWORK = {
     ]
 }
 
-CELERY_BROKER_URL=redis://redis:6379/0
+CELERY_BROKER_URL=redis://localhost:6379/0
+CELERY_BROKER_URL=redis://localhost:6379
