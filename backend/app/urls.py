@@ -5,7 +5,6 @@ from core.views import StatsigViewSet
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("", include("core.urls")),
     path("api_auth/", include("rest_framework.urls"))
 ]
 
