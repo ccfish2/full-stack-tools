@@ -1,9 +1,12 @@
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
-import json
+from django.contrib.auth.models import User
+from django.shortcuts import get_object_or_404
+from serializers import StatsigSerializer
+from rest_framework import viewsets
+from rest_framework.response import Response
 from .models import StatsigApplication
-
 
 def api_hello(request):
     return JsonResponse({
@@ -11,34 +14,25 @@ def api_hello(request):
         "status": "ok",
     })
 
+class StatsigViewSet(viewsets.ViewSet):
+    """
+      mainly post
+    """
 
-@csrf_exempt
-@require_http_methods(["POST"])
-def statsig_application(request):
-    """
-    POST /statsig/application
-    Accepts JSON data and persists it to the database
-    """
-    try:
-        # Parse the JSON body
-        data = json.loads(request.body)
-        
-        # Create a new StatsigApplication record
-        app_record = StatsigApplication.objects.create(data=data)
-        
-        return JsonResponse({
-            "status": "success",
-            "id": app_record.id,
-            "data": app_record.data,
-            "created_at": app_record.created_at.isoformat(),
-        }, status=201)
-    except json.JSONDecodeError:
-        return JsonResponse({
-            "status": "error",
-            "message": "Invalid JSON"
-        }, status=400)
-    except Exception as e:
-        return JsonResponse({
-            "status": "error",
-            "message": str(e)
-        }, status=500)
+    def list(self, request):
+        pass
+
+    def create(self, request):
+        pass
+
+    def retrieve(self, request, pk=None):
+        pass
+
+    def update(self, request, pk=None):
+        pass
+
+    def partial_update(self, request, pk=None):
+        pass
+
+    def destroy(self, request, pk=None):
+        pass
