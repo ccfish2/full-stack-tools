@@ -10,4 +10,6 @@ urlpatterns = [
 ]
 
 router = DefaultRouter(trailing_slash=False)
-router.register('statsig', StatsigViewSet)
+router.register('statsig', StatsigViewSet, basename="statsig")
+
+urlpatterns += router.urls

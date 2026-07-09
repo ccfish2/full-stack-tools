@@ -1,10 +1,11 @@
 
 from rest_framework import viewsets
 
-from backend.core.serializers import StatsigSerializer
+from .serializers import StatsigSerializer
+from .models import StatsigApplication
 
 class StatsigViewSet(viewsets.ModelViewSet):
     serializer_class = StatsigSerializer
    
     def get_queryset(self):
-        return
+        return StatsigApplication.all.objects()
