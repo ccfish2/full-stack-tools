@@ -8,4 +8,4 @@ class StatsigViewSet(viewsets.ModelViewSet):
     serializer_class = StatsigSerializer
    
     def get_queryset(self):
-        return StatsigApplication.all.objects()
+        return StatsigApplication.objects.all()
