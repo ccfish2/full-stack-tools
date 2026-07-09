@@ -10,6 +10,7 @@ DEBUG = True
 ALLOWED_HOSTS = ["127.0.0.1", "localhost", "backend", "*"]
 
 INSTALLED_APPS = [
+    "daphne",
     "corsheaders",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -21,6 +22,7 @@ INSTALLED_APPS = [
     "rest_framework",
 ]
 
+ASGI_APPLICATION = "app.asgi.application"
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
