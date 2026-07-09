@@ -252,6 +252,11 @@ response = requests.post(
 print(response.json())
 ```
 
+### Make client stay connect 
+```
+  curl -N http://127.0.0.1:8000/api/event
+```
+
 ## Troubleshooting
 
 ### Frontend can't connect to backend
@@ -272,7 +277,7 @@ print(response.json())
 
 | Component | Technology |
 |-----------|-----------|
-| Backend API | Django 4.2+ |
+| Backend API | Django 5.2+ |
 | Database | PostgreSQL 15 |
 | Frontend Server | Express + TypeScript |
 | Frontend UI | HTML5 + CSS3 + Vanilla JS |
