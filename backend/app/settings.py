@@ -98,8 +98,9 @@ REST_FRAMEWORK = {
     ]
 }
 
-CELERY_BROKER_URL= "redis://localhost:6379/0"
+#CELERY_BROKER_URL= "redis://localhost:6379/0"
 CELERY_RESULT_BACKEND="redis://localhost:6379/0"
+CELERY_BROKER_URL = f"redis://{os.environ.get('REDIS_HOST', 'localhost')}:6379/0"
 
 EVENTSTREAM_REDIS = {
     "host": "localhost",
