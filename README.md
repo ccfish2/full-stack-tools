@@ -257,6 +257,11 @@ print(response.json())
   curl -N http://127.0.0.1:8000/api/event
 ```
 
+### Make https for k8s dev and browser
+mkcert -install                  # generates local CA, installs into OS/browser trust store
+mkcert seahorse.local            # issues seahorse.local+1.pem / seahorse.local+1-key.pem
+kubectl create secret tls seahorse-tls --cert=seahorse.local+1.pem --key=seahorse.local+1-key.pem
+
 ## Troubleshooting
 
 ### Frontend can't connect to backend
