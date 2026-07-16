@@ -26,6 +26,7 @@ services:
       dockerfile: Dockerfile
     container_name: statsig_backend
     environment:
+      DB_ENGINE: django.db.backends.postgresql
       DB_NAME: ${DB_NAME:-statsig_db}
       DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
@@ -82,6 +83,7 @@ services:
     container_name: statsig_celery_worker
     command: celery -A app worker -l info
     environment:
+      DB_ENGINE: django.db.backends.postgresql
       DB_HOST: db
       DB_PORT: 5432
       REDIS_HOST: redis

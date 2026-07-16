@@ -24,5 +24,8 @@ else:
 END
 
 # Start the server
-echo "Starting Django server..."
-python manage.py runserver 0.0.0.0:8000
+# NOTE: runserver is sync/WSGI and will hang on the streaming SSE response.
+# Daphne serves app.asgi:application, which is what actually makes the
+# /api/events/ StreamingHttpResponse work without blocking the worker.
+echo "Starting Daphne (ASGI)..."
+daphne -b 0.0.0.0 -p 8000 app.asgi:application
