@@ -124,3 +124,9 @@ EVENTSTREAM_STORAGE_CONNECTION = {
     "host": os.environ.get('REDIS_HOST', 'localhost'),
     "port": 6379,
 }
+
+TASKS = {
+    "default": {
+        "BACKEND": "backend.app.task_backend",
+    }
+}

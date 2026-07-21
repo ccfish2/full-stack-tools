@@ -126,7 +126,7 @@ docker run -p 6379:6379 redis
 python manage.py migrate
 
 # Celery worker (separate terminal)
-celery -A app worker -l info
+cd backend && celery -A app worker -l info
 
 # Start the server via Daphne (ASGI) — NOT `runserver`.
 # runserver is sync/WSGI and hangs on the /api/events/ streaming response.
@@ -304,15 +304,19 @@ print(response.json())
 
 ```bash
 # Open a stream and leave it connected — this should hang open, not return immediately
+# browse http://127.0.0.1:8000/api/events/?channel=global
 curl -N http://127.0.0.1:8000/api/events/?channel=global
 
 # In another terminal, trigger an event — it should appear on the curl above instantly
 curl -X POST http://localhost:8000/trigger-events \
   -H "Content-Type: application/json" \
   -d '{"channel": "global", "event_type": "message", "payload": {"message": "hi"}}'
+
+# newly pushed message and real-time data would be expected to display on browser
 ```
 If the first `curl` never receives anything, check that you're running
 `daphne`, not `manage.py runserver` — SSE needs ASGI.
+
 
 ### HTTPS for local dev
 

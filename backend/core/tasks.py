@@ -1,7 +1,9 @@
 from celery import shared_task
 from django_eventstream import send_event
 import logging
-
+from django.core.mail import send_mail
+from django.tasks import task 
+import logging
 logger = logging.getLogger(__name__)
 
 
@@ -34,3 +36,17 @@ def process_event(event_data):
     }
 
     return processed
+
+
+
+@task(priority=2, queue_name="emails", takes_context=True)
+def email_users(context, emails, subject, message):
+    logger.debug(f"Attempt {context.attempt} to send user emails. Task result id {
+        context.task.id
+    }")
+    return send_mail(
+        subject=subject, 
+        messsage=message, 
+        from_email=None,
+        receipient_lists=emails
+    )

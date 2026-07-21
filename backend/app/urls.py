@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from core.views import StatsigViewSet, SSEEventViewSet, hello
+from core.views import StatsigViewSet, SSEEventViewSet, hello, email_notification
 import django_eventstream
 
 urlpatterns = [
@@ -9,6 +9,7 @@ urlpatterns = [
     path("api_auth/", include("rest_framework.urls")),
     path("api/events/", django_eventstream.views.events, {"channels": ["global"]}),
     path("api/hello/", hello),
+    path("api/publishmsg/", email_notification),
 ]
 
 router = DefaultRouter(trailing_slash=False)

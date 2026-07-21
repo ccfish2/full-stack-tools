@@ -169,6 +169,7 @@ To work on the code locally without Docker:
 
 ### Backend
 ```bash
+# python3.12, 3.13 or 3.14 needs be installed
 cd backend
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate

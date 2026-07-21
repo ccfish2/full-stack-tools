@@ -3,7 +3,7 @@ from rest_framework import viewsets
 
 from .serializers import StatsigSerializer, SSEEventSerializer
 from .models import StatsigApplication, SSEEvent
-from .tasks import publish_sse_event
+from .tasks import publish_sse_event, email_users
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -38,3 +38,11 @@ class StatsigViewSet(viewsets.ModelViewSet):
    
     def get_queryset(self):
         return StatsigApplication.objects.all()
+
+@api_view(["POST"])
+def email_notification():
+    email_users.enqueue(
+    emails=["seniorsoftwareengineerleader@gmail.com"],
+    subject="You have a message: use django6.0 task framework"",
+    message="please upgrade requirements to django6.0",
+)
