@@ -300,7 +300,7 @@ response = requests.post(
 print(response.json())
 ```
 
-### Testing SSE + Celery
+### Async Using SSE + Celery
 
 ```bash
 # Open a stream and leave it connected — this should hang open, not return immediately
@@ -317,6 +317,10 @@ curl -X POST http://localhost:8000/trigger-events \
 If the first `curl` never receives anything, check that you're running
 `daphne`, not `manage.py runserver` — SSE needs ASGI.
 
+### Async using backend database
+```
+python3.13 manage.py db_worker
+```
 
 ### HTTPS for local dev
 

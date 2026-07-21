@@ -41,6 +41,7 @@ def process_event(event_data):
 
 @task(priority=2, queue_name="emails", takes_context=True)
 def email_users(context, emails, subject, message):
+    # handle your business logic asyncly
     logger.debug(f"Attempt {context.attempt} to send user emails. Task result id {
         context.task.id
     }")

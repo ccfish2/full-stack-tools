@@ -40,9 +40,16 @@ class StatsigViewSet(viewsets.ModelViewSet):
         return StatsigApplication.objects.all()
 
 @api_view(["POST"])
-def email_notification():
-    email_users.enqueue(
-    emails=["seniorsoftwareengineerleader@gmail.com"],
-    subject="You have a message: use django6.0 task framework",
-    message="please upgrade requirements to django6.0",
-)
+@permission_classes([AllowAny])
+def email_notification(request):
+    task = email_users.enqueue(
+        emails=["seniorsoftwareengineerleader@gmail.com"],
+        subject="You have a message: use django6.0 task framework",
+        message="please upgrade requirements to django6.0",
+    )
+
+    return Response({
+        "status": "queued",
+        "message": "Email task has been queued",
+        "task_id": getattr(task, "id", None),
+    })
