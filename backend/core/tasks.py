@@ -46,7 +46,7 @@ def email_users(context, emails, subject, message):
     }")
     return send_mail(
         subject=subject, 
-        messsage=message, 
+        message=message, 
         from_email=None,
-        receipient_lists=emails
+        receipient_lists=emails,
     )

@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django_eventstream",
+    "django_tasks_db",
     "core",
     "rest_framework",
 ]
@@ -127,6 +128,7 @@ EVENTSTREAM_STORAGE_CONNECTION = {
 
 TASKS = {
     "default": {
-        "BACKEND": "backend.app.task_backend",
+        "BACKEND": "django_tasks_db.DatabaseBackend",
+        "QUEUES": ["default", "emails"], 
     }
 }

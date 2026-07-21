@@ -43,6 +43,6 @@ class StatsigViewSet(viewsets.ModelViewSet):
 def email_notification():
     email_users.enqueue(
     emails=["seniorsoftwareengineerleader@gmail.com"],
-    subject="You have a message: use django6.0 task framework"",
+    subject="You have a message: use django6.0 task framework",
     message="please upgrade requirements to django6.0",
 )
