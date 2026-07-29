@@ -12,13 +12,14 @@ class StatsigApplication(models.Model):
         PROD = "prod", "Production"
         STAGE = "stage", "Stage"
         DEV = "dev", "Development"
-    last_checksum = models.CharField(max_length=256) # the last snapshot of this product
+    last_checksum = models.CharField(max_length=256,default="") # the last snapshot of this product
     environment = models.CharField(
         max_length=10,
         choices=Environment.choices,
+        default="stage"
 
     )
-    product = models.CharField(max_length=100) # which product this feature flag belongs to 
+    product = models.CharField(max_length=100,default="stage") # which product this feature flag belongs to 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
