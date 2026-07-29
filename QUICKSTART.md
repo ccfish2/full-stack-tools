@@ -59,7 +59,7 @@ Once services are running, open your browser:
 
 ```bash
 # Submit data
-curl -X POST http://localhost:8000/statsig/application/ \
+curl -X POST http://localhost:8000/statsigfeatureflag/application/ \
   -H "Content-Type: application/json" \
   -d '{"key": "feature_flag", "key2": "enabled"}'
 

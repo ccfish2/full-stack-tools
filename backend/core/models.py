@@ -1,6 +1,4 @@
 from django.db import models
-import json
-
 
 class ExampleItem(models.Model):
     name = models.CharField(max_length=128)
@@ -9,15 +7,23 @@ class ExampleItem(models.Model):
     def __str__(self):
         return self.name
 
-
 class StatsigApplication(models.Model):
-    data = models.JSONField(default=dict)
+    class Environment(models.TextChoices):
+        PROD = "prod", "Production"
+        STAGE = "stage", "Stage"
+        DEV = "dev", "Development"
+    last_checksum = models.CharField(max_length=256) # the last snapshot of this product
+    environment = models.CharField(
+        max_length=10,
+        choices=Environment.choices,
+
+    )
+    product = models.CharField(max_length=100) # which product this feature flag belongs to 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"StatsigApplication {self.id}"
-
+        return f"{self.product} ({self.environment})"
 
 class SSEEvent(models.Model):
     """
@@ -35,3 +41,15 @@ class SSEEvent(models.Model):
 
     def __str__(self):
         return f"SSEEvent({self.channel}, {self.event_type}) #{self.id}"
+
+class StatsigMetadataSnapShots(models.Model):
+    statsig_flag = models.ForeignKey(
+        StatsigApplication, 
+        on_delete=models.CASCADE,
+        related_name="snapshots",
+    )
+    timestamp = models.DateTimeField() # the created timestamp of this snapshots
+    metadata = models.JSONField() # json blob of all metata
+
+    def __str__(self):
+        return f"{self.statsig_flag.product} @{self.timestamp}"

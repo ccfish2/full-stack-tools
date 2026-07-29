@@ -17,7 +17,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - statsig_network
+      - full-stack-tools_statsig_network
 
   # Django Backend
   backend:
@@ -44,7 +44,7 @@ services:
     volumes:
       - ./backend:/app
     networks:
-      - statsig_network
+      - full-stack-tools_statsig_network
 
   # TypeScript Frontend
   frontend:
@@ -59,7 +59,7 @@ services:
     depends_on:
       - backend
     networks:
-      - statsig_network
+      - full-stack-tools_statsig_network
 
   redis:
     image: redis:7-alpine
@@ -74,7 +74,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-    - statsig_network
+    - full-stack-tools_statsig_network
 
   celery_worker:
     build:
@@ -87,6 +87,9 @@ services:
       DB_HOST: db
       DB_PORT: 5432
       REDIS_HOST: redis
+      DB_NAME: ${DB_NAME:-statsig_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
     depends_on:
       db:
         condition: service_healthy
@@ -95,12 +98,12 @@ services:
     volumes:
       - ./backend:/app
     networks:
-      - statsig_network
+      - full-stack-tools_statsig_network
 
 volumes:
   postgres_data:
   redis_data:
 
 networks:
-  statsig_network:
+  full-stack-tools_statsig_network:
     driver: bridge
