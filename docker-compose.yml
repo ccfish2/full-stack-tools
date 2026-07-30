@@ -46,20 +46,20 @@ services:
     networks:
       - full-stack-tools_statsig_network
 
-  # TypeScript Frontend
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: statsig_frontend
-    environment:
-      DJANGO_API_URL: http://backend:8000
-    ports:
-      - "9090:9090"
-    depends_on:
-      - backend
-    networks:
-      - full-stack-tools_statsig_network
+  # # TypeScript Frontend
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   container_name: statsig_frontend
+  #   environment:
+  #     DJANGO_API_URL: http://backend:8000
+  #   ports:
+  #     - "9090:9090"
+  #   depends_on:
+  #     - backend
+  #   networks:
+  #     - full-stack-tools_statsig_network
 
   redis:
     image: redis:7-alpine

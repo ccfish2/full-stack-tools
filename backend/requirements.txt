@@ -6,4 +6,5 @@ djangorestframework>=3.16
 celery>=5.6.0
 redis>=7
 django_eventstream==5.3.4
+django_browser_reload>=1.21.0
 daphne

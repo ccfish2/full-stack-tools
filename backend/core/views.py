@@ -7,6 +7,7 @@ from .tasks import publish_sse_event, email_users
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from django.shortcuts import render
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
@@ -53,3 +54,6 @@ def email_notification(request):
         "message": "Email task has been queued",
         "task_id": getattr(task, "id", None),
     })
+
+def index(request):
+    return render(request, "index.html")

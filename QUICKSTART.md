@@ -44,7 +44,7 @@ docker-compose up --build -d
 
 Once services are running, open your browser:
 
-- **Frontend UI**: http://localhost:9090
+<!-- - **Frontend UI**: http://localhost:9090 -->
 - **Backend API**: http://localhost:8000
 - **API Docs**: http://localhost:8000/admin/
 
