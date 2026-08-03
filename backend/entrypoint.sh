@@ -1,31 +1,29 @@
 #!/bin/sh
+set -e
 
-# Wait for database to be ready
-echo "Waiting for PostgreSQL to be ready..."
-while ! nc -z $DB_HOST $DB_PORT; do
-  echo "PostgreSQL is unavailable - sleeping"
-  sleep 1
+
+echo "Waiting for PostgreSQL..."
+
+while ! nc -z "$DB_HOST" "$DB_PORT"; do
+    echo "PostgreSQL unavailable - sleeping"
+    sleep 1
 done
-echo "PostgreSQL is up"
 
-# Run migrations
-echo "Running database migrations..."
+
+echo "PostgreSQL is ready"
+
+
+echo "Running migrations..."
+
 python manage.py migrate
 
-# Create superuser if it doesn't exist
-echo "Creating superuser (if needed)..."
-python manage.py shell << END
-from django.contrib.auth.models import User
-if not User.objects.filter(username='admin').exists():
-    User.objects.create_superuser('admin', 'admin@example.com', 'admin123')
-    print("Superuser 'admin' created")
-else:
-    print("Superuser already exists")
-END
 
-# Start the server
-# NOTE: runserver is sync/WSGI and will hang on the streaming SSE response.
-# Daphne serves app.asgi:application, which is what actually makes the
-# /api/events/ StreamingHttpResponse work without blocking the worker.
-echo "Starting Daphne (ASGI)..."
-daphne -b 0.0.0.0 -p 8000 app.asgi:application
+echo "Starting Gunicorn with Daphne workers..."
+
+
+exec gunicorn \
+    app.asgi:application \
+    --bind 0.0.0.0:8000 \
+    --worker-class daphne.worker.DaphneWorker \
+    --workers 4 \
+    --timeout 120

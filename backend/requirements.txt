@@ -1,4 +1,4 @@
-Django>=6.0
+Django==6.0.1
 django_tasks_db
 django-cors-headers>=3.15
 psycopg2-binary>=2.9
