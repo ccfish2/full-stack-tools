@@ -45,8 +45,9 @@ docker-compose up --build -d
 Once services are running, open your browser:
 
 <!-- - **Frontend UI**: http://localhost:9090 -->
-- **Backend API**: http://localhost:8000
-- **API Docs**: http://localhost:8000/admin/
+- **Backend API**: http://localhost:8000/api
+- **API Docs**: http://localhost:8000/api_auth/login/?next=/api/
+- **API Admin** http://localhost:8000/admin/login/?next=/admin/
 
 ## 5. Use the Application
 
@@ -175,6 +176,13 @@ python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 python manage.py runserver
+
+cd backend
+celery -A app worker -l info
+
+brew install redis
+brew services start redis
+redis-server
 ```
 
 ### Frontend

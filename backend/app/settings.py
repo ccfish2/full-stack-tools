@@ -23,7 +23,17 @@ INSTALLED_APPS = [
     "core",
     "rest_framework",
     "django_browser_reload",
+    "django_vite",
 ]
+
+DJANGO_VITE = {
+    "default": {
+        "dev_mode": DEBUG,               # True in dev -> proxies to Vite dev server
+        "dev_server_port": 5173,          # Vite's default port
+        "manifest_path": BASE_DIR / "static" / "dist" / ".vite" / "manifest.json",
+        "static_url_prefix": "dist",
+    }
+}
 
 ASGI_APPLICATION = "app.asgi.application"
 MIDDLEWARE = [
