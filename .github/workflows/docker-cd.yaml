@@ -30,12 +30,12 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
 
-      - name: Build and Push Backend
+      - name: Build and Push Backend Image
         uses: docker/build-push-action@v6
         with:
           context: ./backend
           file: ./backend/Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/full-stack-tools-backend:${{ github.sha }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/full-stack-tools-backend:latest
+            ${{ vars.DOCKERHUB_USERNAME }}/full-stack-tools-backend:${{ github.sha }}
+            ${{ vars.DOCKERHUB_USERNAME }}/full-stack-tools-backend:latest
