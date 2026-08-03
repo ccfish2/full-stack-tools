@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import StatsigApplication, SSEEvent, StatsigMetadataSnapShots
+from core.models import StatsigApplication, SSEEvent, StatsigMetadataSnapShots
 
 
 class StatsigMetadataSnapshotSerializer(serializers.ModelSerializer):

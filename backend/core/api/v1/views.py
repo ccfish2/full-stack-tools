@@ -1,0 +1,55 @@
+
+from rest_framework import viewsets
+
+from core.api.v1.serializers import StatsigSerializer, SSEEventSerializer
+from core.models import StatsigApplication, SSEEvent
+from core.tasks import publish_sse_event, email_users
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def hello(request):
+    return Response({"message": "Hello from Django backend", "status": "ok"})
+
+
+class SSEEventViewSet(viewsets.ModelViewSet):
+    """
+    POST /trigger-events  {"channel": "global", "event_type": "message", "payload": {...}}
+    Persists the SSEEvent row (via the serializer, like any other ModelViewSet),
+    then queues publish_sse_event on Celery. That task calls
+    django_eventstream.send_event(), which pushes to Redis; any TypeScript
+    client with an open EventSource on /api/events/?channel=<channel> pulls
+    it from there via its onmessage handler.
+    """
+    serializer_class = SSEEventSerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        return SSEEvent.objects.all()
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        publish_sse_event.delay(instance.channel, instance.event_type, instance.payload)
+
+class StatsigViewSet(viewsets.ModelViewSet):
+    serializer_class = StatsigSerializer
+   
+    def get_queryset(self):
+        return StatsigApplication.objects.all()
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def email_notification(request):
+    task = email_users.enqueue(
+        emails=["seniorsoftwareengineerleader@gmail.com"],
+        subject="You have a message: use django6.0 task framework",
+        message="please upgrade requirements to django6.0",
+    )
+
+    return Response({
+        "status": "queued",
+        "message": "Email task has been queued",
+        "task_id": getattr(task, "id", None),
+    })
