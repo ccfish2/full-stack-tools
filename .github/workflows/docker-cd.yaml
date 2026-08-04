@@ -35,6 +35,7 @@ jobs:
         with:
           context: ./backend
           file: ./backend/Dockerfile
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             ${{ vars.DOCKERHUB_USERNAME }}/full-stack-tools-backend:${{ github.sha }}
