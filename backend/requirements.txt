@@ -9,4 +9,3 @@ django_eventstream==5.3.4
 django_browser_reload>=1.21.0
 daphne
 django_vite
-gunicorn>=21.2
