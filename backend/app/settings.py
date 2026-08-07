@@ -133,6 +133,9 @@ REST_FRAMEWORK = {
 
 #CELERY_BROKER_URL= "redis://localhost:6379/0"
 #CELERY_RESULT_BACKEND="redis://localhost:6379/0"
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
+
 CELERY_BROKER_URL = f"redis://{os.environ.get('REDIS_HOST', 'localhost')}:6379/0"
 CELERY_RESULT_BACKEND= f"redis://{os.environ.get('REDIS_HOST', 'localhost')}:6379/0"
 
