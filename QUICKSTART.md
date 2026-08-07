@@ -134,6 +134,7 @@ kill -9 <PID>
 - Check if backend is running: `docker-compose ps`
 - Check backend logs: `docker-compose logs backend`
 - Verify backend is listening: `curl http://localhost:8000/api/hello/`
+- Verify SSE `http://127.0.0.1:8000/api/events/?channel=global`
 
 ## 11. Project Structure
 
@@ -191,6 +192,8 @@ cd frontend
 npm install
 npm run build
 npm start
+http://127.0.0.1:8000/api/v1
+http://127.0.0.1:8000/api/v2
 ```
 
 ## 14. Support
