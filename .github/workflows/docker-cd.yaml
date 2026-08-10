@@ -13,7 +13,7 @@ on:
 
 env:
   RELEASE_NAME: fullstack-app-rel
-  CHART_REPO_URL: https://ccfish2.github.io/charts/   # GitHub Pages index for the charts repo
+  CHART_REPO_URL: https://ccfish2.github.io/charts/fullstack-app   # GitHub Pages index for the charts repo
   CHART_NAME: fullstackapp/fullstack-app
   IMAGE_REPO: ${{ vars.DOCKERHUB_USERNAME }}/full-stack-tools-backend
 
