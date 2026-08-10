@@ -37,4 +37,3 @@ spec:
           backendRefs:
             - name: fullstack-app-rel
               port: 8000
-    
