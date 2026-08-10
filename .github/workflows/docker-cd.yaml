@@ -72,8 +72,16 @@ jobs:
 
       - name: Port-forward service and run smoke test
         run: |
-          SVC=$(kubectl get svc -l app.kubernetes.io/instance="${{ env.RELEASE_NAME }}" \
+          SVC=$(kubectl get svc \
+                -l app.kubernetes.io/instance="${{ env.RELEASE_NAME }}" \
                 -o jsonpath='{.items[0].metadata.name}')
+
+          if [ -z "$SVC" ]; then
+            echo "::error::No service found for instance=${{ env.RELEASE_NAME }}"
+            kubectl get svc --show-labels
+            exit 1
+          fi
+
           echo "Forwarding svc/$SVC 8000:8000"
           kubectl port-forward "svc/$SVC" 8000:8000 &
           FWD_PID=$!
