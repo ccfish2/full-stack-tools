@@ -13,7 +13,6 @@ from rest_framework.response import Response
 def hello(request):
     return Response({"message": "Hello from Django backend", "status": "ok"})
 
-
 class SSEEventViewSet(viewsets.ModelViewSet):
     """
     POST /trigger-events  {"channel": "global", "event_type": "message", "payload": {...}}

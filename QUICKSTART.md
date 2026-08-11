@@ -196,6 +196,14 @@ http://127.0.0.1:8000/api/v1
 http://127.0.0.1:8000/api/v2
 ```
 
+### OpenAPI
+```
+http://127.0.0.1:8000/api/v1/docs
+cd backend
+python3.13 manage.py spectacular --file openapi-schema.yaml
+the generated schema can be used as contract among microservices
+```
+
 ## 14. Support
 
 - Django docs: https://docs.djangoproject.com/

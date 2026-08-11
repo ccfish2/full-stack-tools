@@ -49,11 +49,9 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django_browser_reload.middleware.BrowserReloadMiddleware",
-    # "core.middleware.VersionDeprecationMiddleware",
 ]
 
 ROOT_URLCONF = "app.urls"
-
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -114,7 +112,6 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "/static/"
-
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -148,8 +145,7 @@ SPECTACULAR_SETTINGS = {
     "SORT_OPERATIONS": False,
 }
 
-#CELERY_BROKER_URL= "redis://localhost:6379/0"
-#CELERY_RESULT_BACKEND="redis://localhost:6379/0"
+# provided through charts deployment
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
 
