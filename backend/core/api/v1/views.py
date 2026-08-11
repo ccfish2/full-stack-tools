@@ -34,6 +34,10 @@ class SSEEventViewSet(viewsets.ModelViewSet):
         publish_sse_event.delay(instance.channel, instance.event_type, instance.payload)
 
 class StatsigViewSet(viewsets.ModelViewSet):
+    """
+    POST /api/v1/statsigfeatureflag post product, environment, checksum and associated feature into the system 
+    GET /api/v1/statsigfeatureflag retrieving Statsig feature from the system
+    """
     serializer_class = StatsigSerializer
    
     def get_queryset(self):
