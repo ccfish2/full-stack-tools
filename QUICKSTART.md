@@ -184,14 +184,17 @@ celery -A app worker -l info
 brew install redis
 brew services start redis
 redis-server
+
+cd backend
+source venv/bin/activate
+daphne -b 127.0.0.1 -p 8000 app.asgi:application
 ```
 
 ### Frontend
 ```bash
-cd frontend
+cd frontend/client
 npm install
-npm run build
-npm start
+npm run dev
 http://127.0.0.1:8000/api/v1
 http://127.0.0.1:8000/api/v2
 ```

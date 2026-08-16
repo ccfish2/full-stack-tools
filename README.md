@@ -251,6 +251,17 @@ docker-compose exec db psql -U postgres -d statsig_db
 \q
 ```
 
+## API
+┌──────────────────────────┬──────────────────────────────┐
+│ Code                     │ URL                          │
+├──────────────────────────┼──────────────────────────────┤
+│ API_BASE                 │ /api                         │
+│ fetcher("/events/")      │ /api/events/                 │
+│ fetcher("/statsig...")   │ /api/statsigfeatureflag      │
+│ fetcher("/trigger...")   │ /api/trigger-events           │
+│ SSE                      │ /api/events/?channel=global   │
+└──────────────────────────┴──────────────────────────────┘
+
 ## Testing the API
 
 ```bash
