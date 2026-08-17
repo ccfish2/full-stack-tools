@@ -7,16 +7,48 @@ A full-stack prototype: a Django backend (REST API + Server-Sent Events + Celery
 ```
 .
 ├── backend/                  # Django backend
-│   ├── app/                  # Project config (settings, urls, asgi, celery)
+│   ├── app/                  # Project config (settings, urls, asgi, celery)     
 │   ├── core/                 # Main app: models, views, serializers, Celery tasks
+          api
+            v1/               # Django v1 contract
+            v2/               # Django v2 contract
+          migrations
 │   ├── templates/            # index.html (mounts the React client via django-vite)
 │   ├── static/dist/          # Built client assets (generated, served by Django)
 │   ├── entrypoint.sh         # Migrates DB, seeds a superuser, starts Daphne (ASGI)
 │   └── requirements.txt      # Python dependencies
+        Dockerfile
+        manage.py
 ├── frontend/
 │   ├── client/                # React + Vite + TypeScript SSE client (active frontend)
-│   │   └── src/               # App.tsx, api.ts, useSSE.ts, main.tsx
-│   └── src/server.ts          # Legacy Express server (not started by docker-compose)
+│   │   └── src/
+                api
+                  client.tsx  # http mechanism
+                  v1/          # Django API contract
+                    featureFlags.ts
+                    events.ts
+                  v2/         # Django v2 API contract
+                    featureFalgs.ts
+                    events.ts
+
+                features      # Feature behavior UI
+                    featureFlags
+                      components
+                      hooks
+                      types.ts
+                      index.ts
+                
+                    evetns
+                      components
+                      hooks
+                      types.ts
+                           
+│   └──     App.tsx           # Compose UI. For example: knows featurefalgs --> client.tsx ---> api/v1
+            main.tsx 
+            useSSE.ts         # SSE lifecycle + SWR invalidation
+        vite.config.ts
+        tsconfig.json
+        package.json      
 ├── docker-compose.yml         # db, backend, redis, celery_worker services
 └── .env                       # Environment variables
 ```
