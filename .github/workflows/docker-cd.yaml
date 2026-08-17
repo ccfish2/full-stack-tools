@@ -1,101 +1,872 @@
+# 1. Checkout
+# 2. Resolve image tag
+# 3. Create kind
+# 4. Install Helm
+
+# 5. Install Gateway API CRDs
+# 6. Remove incompatible TLSRoute CRD
+# 7. Verify Gateway API CRDs
+
+# 8. Install Cilium 1.19.6
+# 9. Verify Cilium
+# 10. Verify GatewayClass
+
+# 11. Configure Cilium LB-IPAM
+
+# 12. Create dolphin namespace
+# 13. Add Helm repo
+# 14. Install fullstack-app
+# 15. Show cluster state
+# 16. Wait for all app deployments
+
+# 17. HTTP smoke test
+#        |
+#        +---- PASS
+
+# 18. Install mkcert
+# 19. Generate certificate
+# 20. Create fullstack-tls Secret
+
+# 21. Apply gatewayapi.yaml
+
+# 22. Verify Gateway
+# 23. Wait Gateway Programmed=True
+# 24. Verify Gateway received address
+
+# 25. Wait HTTPRoute Accepted=True
+# 26. Wait HTTPRoute ResolvedRefs=True
+
+# 27. Create ConfigMap containing mkcert root CA
+
+# 28. Create netshoot pod
+# 29. HTTPS curl
+#        |
+#        +---- TLS termination
+#        +---- HTTPRoute
+#        +---- Django
+#        |
+#        +---- PASS
+
+# 30. Final state
+# 31. Failure diagnostics
+# 32. Delete kind
 name: Deploy & Verify
 
 on:
   workflow_run:
     workflows: ["CI"]
     types: [completed]
+
   workflow_dispatch:
     inputs:
       image_tag:
-        description: 'Image tag to deploy (defaults to latest)'
+        description: "Image tag to deploy"
         required: false
-        default: 'latest'
+        default: "latest"
+  
+      test_stage:
+        description: "How far to run the deployment"
+        required: false
+        default: "full"
+        type: choice
+        options:
+          - cilium
+          - gateway-crds
+          - http
+          - https
+          - full
 
 env:
   RELEASE_NAME: fullstack-app-rel
-  CHART_REPO_URL: https://ccfish2.github.io/charts/fullstack-app   # GitHub Pages index for the charts repo
+  CHART_REPO_URL: https://ccfish2.github.io/charts/fullstack-app
   CHART_NAME: fullstackapp/fullstack-app
   IMAGE_REPO: ${{ vars.DOCKERHUB_USERNAME }}/full-stack-tools-backend
 
+  # Kubernetes / CNI versions
+  KIND_NODE_IMAGE: kindest/node:v1.31.0
+  CILIUM_VERSION: "1.19.6"
+  GATEWAY_API_VERSION: "v1.5.0"
+
+  # Gateway configuration
+  APP_NAMESPACE: dolphin
+  GATEWAY_NAME: fullstack-gateway
+  GATEWAY_HOSTNAME: fullstack.dolphin.local
+
 jobs:
   deploy:
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    if: >
+      ${{
+        github.event_name == 'workflow_dispatch' ||
+        github.event.workflow_run.conclusion == 'success'
+      }}
+
     runs-on: ubuntu-latest
+
     steps:
+      # ------------------------------------------------------------
+      # 1. Checkout
+      # ------------------------------------------------------------
+
       - name: Checkout
         uses: actions/checkout@v4
 
+      # ------------------------------------------------------------
+      # 2. Resolve image tag
+      # ------------------------------------------------------------
+
       - name: Resolve image tag
         id: tag
+        shell: bash
         run: |
-          # workflow_run gives us the exact commit CI just built and pushed;
-          # workflow_dispatch lets you deploy an arbitrary tag manually
+          set -euo pipefail
+
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "tag=${{ github.event.inputs.image_tag }}" >> "$GITHUB_OUTPUT"
           else
             echo "tag=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
           fi
 
+      # ------------------------------------------------------------
+      # 3. Create kind cluster
+      #
+      # The kind config MUST have:
+      #
+      # networking:
+      #   disableDefaultCNI: true
+      #
+      # because Cilium will be installed below.
+      # ------------------------------------------------------------
+
       - name: Create kind cluster
         uses: helm/kind-action@v1.10.0
         with:
           cluster_name: fullstack-ci
+          config: .github/workflows/kind-cluster.yaml
+
+      # ------------------------------------------------------------
+      # 4. Install Helm
+      # ------------------------------------------------------------
 
       - name: Set up Helm
         uses: azure/setup-helm@v4
         with:
           version: v3.15.0
+      
+      # ------------------------------------------------------------
+      # 8. Install Gateway API CRDs
+      #
+      # Cilium 1.19.6 expects TLSRoute v1alpha2 to be discoverable
+      # during Gateway API controller initialization.
+      #
+      # Gateway API v1.5 promotes TLSRoute to v1, so remove the
+      # v1 TLSRoute CRD from the v1.5 standard bundle before
+      # starting Cilium.
+      # ------------------------------------------------------------
+      - name: Install Gateway API CRDs
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          kubectl apply \
+            --server-side \
+            -f "https://github.com/kubernetes-sigs/gateway-api/releases/download/${GATEWAY_API_VERSION}/standard-install.yaml"
+
+          kubectl delete crd \
+            tlsroutes.gateway.networking.k8s.io \
+            --ignore-not-found=true
+
+      # ------------------------------------------------------------
+      # 9. Verify Gateway API CRDs
+      # ------------------------------------------------------------
+      - name: Verify Gateway API CRDs
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "Gateway API CRDs:"
+          kubectl get crd \
+            gatewayclasses.gateway.networking.k8s.io \
+            gateways.gateway.networking.k8s.io \
+            httproutes.gateway.networking.k8s.io \
+            grpcroutes.gateway.networking.k8s.io \
+            referencegrants.gateway.networking.k8s.io
+
+          echo
+          echo "Gateway API resources:"
+          kubectl api-resources \
+            --api-group=gateway.networking.k8s.io
+
+          echo
+          echo "TLSRoute CRD should not be installed:"
+          if kubectl get crd tlsroutes.gateway.networking.k8s.io >/dev/null 2>&1; then
+            echo "::error::TLSRoute CRD is still installed"
+            exit 1
+          fi
+
+          echo "Gateway API CRD verification passed."
+
+      # ------------------------------------------------------------
+      # 10. Install Cilium
+      # ------------------------------------------------------------
+
+      - name: Add Cilium Helm repo
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          helm repo add cilium https://helm.cilium.io/
+          helm repo update
+
+      - name: Install Cilium
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          helm install cilium cilium/cilium \
+            --version "${CILIUM_VERSION}" \
+            --namespace kube-system \
+            --set gatewayAPI.enabled=true \
+            --set-string gatewayAPI.gatewayClass.create=true \
+            --set operator.replicas=1 \
+            --wait \
+            --timeout 10m
+
+      # ------------------------------------------------------------
+      # 11. Verify Cilium + Gateway API
+      # ------------------------------------------------------------
+
+      - name: Verify Cilium Gateway API
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "Cilium pods:"
+          kubectl -n kube-system get pods -l k8s-app=cilium -o wide
+
+          echo
+          echo "Cilium operator:"
+          kubectl -n kube-system get pods -l name=cilium-operator -o wide
+
+          echo
+          echo "GatewayClass:"
+          kubectl get gatewayclasses.gateway.networking.k8s.io
+
+          echo
+          echo "Waiting for Cilium GatewayClass to be accepted..."
+
+          kubectl wait \
+            --for=condition=Accepted \
+            gatewayclass/cilium \
+            --timeout=90s
+
+          echo
+          echo "Cilium GatewayClass:"
+          kubectl get gatewayclass cilium -o wide
+
+          echo
+          echo "Cilium Gateway API verification passed."
+    
+      # ------------------------------------------------------------
+      # 10. Configure Cilium LB-IPAM
+      #
+      # Cilium Gateway creates a LoadBalancer Service.
+      # LB-IPAM assigns an address to that Service.
+      #
+      # We use addresses from the kind Docker network so that the
+      # Gateway IP is reachable from the cluster.
+      # ------------------------------------------------------------
+      - name: Configure Cilium LB-IPAM
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          KIND_SUBNET="$(
+            docker network inspect kind \
+              -f '{{range .IPAM.Config}}{{.Subnet}}{{end}}'
+          )"
+
+          echo "Kind Docker subnet: ${KIND_SUBNET}"
+
+          PREFIX="$(echo "${KIND_SUBNET}" | cut -d. -f1-3)"
+
+          LB_START="${PREFIX}.100"
+          LB_STOP="${PREFIX}.110"
+
+          echo "Cilium LB-IPAM range:"
+          echo "  start: ${LB_START}"
+          echo "  stop:  ${LB_STOP}"
+
+          kubectl apply -f - <<EOF
+          apiVersion: cilium.io/v2
+          kind: CiliumLoadBalancerIPPool
+          metadata:
+            name: kind-gateway-pool
+          spec:
+            blocks:
+              - start: ${LB_START}
+                stop: ${LB_STOP}
+          EOF
+
+          echo
+          echo "CiliumLoadBalancerIPPool:"
+          kubectl get ciliuml2announcement 2>/dev/null || true
+          kubectl get ciliumloadbalancerippool kind-gateway-pool -o yaml
+
+      # ------------------------------------------------------------
+      # 10. Create application namespace
+      # ------------------------------------------------------------
+      - name: Create application namespace
+        run: |
+          kubectl create namespace "${APP_NAMESPACE}" \
+            --dry-run=client \
+            -o yaml | kubectl apply -f -
+
+      # ------------------------------------------------------------
+      # 11. Add fullstackapp Helm repository
+      # ------------------------------------------------------------
 
       - name: Add fullstackapp Helm repo
         run: |
-          helm repo add fullstackapp "${{ env.CHART_REPO_URL }}"
+          helm repo add fullstackapp "${CHART_REPO_URL}"
           helm repo update
 
+      # ------------------------------------------------------------
+      # 12. Install application
+      #
+      # IMPORTANT:
+      # The Gateway/HTTPRoute in gatewayapi.yaml are in the
+      # "dolphin" namespace, so the application Service must also
+      # be in dolphin.
+      # ------------------------------------------------------------
+
       - name: Install chart
+        shell: bash
         run: |
-          helm install "${{ env.RELEASE_NAME }}" "${{ env.CHART_NAME }}" \
-            --set image.repository="${{ env.IMAGE_REPO }}" \
+          set -euo pipefail
+
+          helm install "${RELEASE_NAME}" "${CHART_NAME}" \
+            --namespace "${APP_NAMESPACE}" \
+            --set image.repository="${IMAGE_REPO}" \
             --set image.tag="${{ steps.tag.outputs.tag }}" \
-            --wait --timeout 120s
+            --wait \
+            --timeout 120s
+
+      # ------------------------------------------------------------
+      # 13. Show cluster state
+      # ------------------------------------------------------------
 
       - name: Show cluster state
         if: always()
         run: |
-          kubectl get pods -o wide
-          kubectl get svc -o wide
+          kubectl get nodes -o wide
+          kubectl get pods -A -o wide
+          kubectl get svc -A -o wide
+
+      # ------------------------------------------------------------
+      # 14. Wait for application rollout
+      # ------------------------------------------------------------
 
       - name: Wait for rollout
         run: |
-          kubectl rollout status deployment \
-            -l app.kubernetes.io/instance="${{ env.RELEASE_NAME }}" \
-            --timeout=90s
+            set -euo pipefail
+        
+            deployments="$(kubectl get deployments \
+              -n "${APP_NAMESPACE}" \
+              -o name | grep "^deployment.apps/${RELEASE_NAME}-" || true)"
+        
+            if [ -z "$deployments" ]; then
+              echo "::error::No deployments found for release ${RELEASE_NAME}"
+              kubectl get deployments -n "${APP_NAMESPACE}"
+              exit 1
+            fi
+        
+            echo "Deployments for ${RELEASE_NAME}:"
+            echo "$deployments"
+        
+            for deployment in $deployments; do
+              echo "Waiting for rollout: ${deployment}"
+        
+              kubectl rollout status \
+                -n "${APP_NAMESPACE}" \
+                "${deployment}" \
+                --timeout=90s
+            done
 
-      - name: Port-forward service and run smoke test
+      # ------------------------------------------------------------
+      # 15. Verify application using direct HTTP
+      #
+      # This is intentionally the first application verification.
+      # It verifies:
+      #
+      #   Deployment
+      #       |
+      #       v
+      #   Service
+      #       |
+      #       v
+      #   Application
+      #
+      # No Gateway / TLS involved yet.
+      # ------------------------------------------------------------
+
+      - name: HTTP smoke test
+        shell: bash
         run: |
-          SVC=$(kubectl get svc \
-                -l app.kubernetes.io/instance="${{ env.RELEASE_NAME }}" \
-                -o jsonpath='{.items[0].metadata.name}')
+          set -euo pipefail
 
+          SVC="$(kubectl get svc \
+            -n "${APP_NAMESPACE}" \
+            -o name | grep "^service/${RELEASE_NAME}$" || true)"
+      
           if [ -z "$SVC" ]; then
-            echo "::error::No service found for instance=${{ env.RELEASE_NAME }}"
-            kubectl get svc --show-labels
+            echo "::error::Service ${RELEASE_NAME} not found"
+            kubectl get svc -n "${APP_NAMESPACE}" --show-labels
+            exit 1
+          fi
+      
+          echo "Using ${SVC}"
+      
+          kubectl port-forward \
+            -n "${APP_NAMESPACE}" \
+            "${SVC}" \
+            8000:8000 >/tmp/port-forward.log 2>&1 &
+      
+          FWD_PID=$!
+      
+          cleanup() {
+            kill "$FWD_PID" 2>/dev/null || true
+          }
+      
+          trap cleanup EXIT
+      
+          echo "Waiting for port-forward and HTTP endpoint..."
+      
+          SUCCESS=false
+      
+          for i in {1..30}; do
+            if RESPONSE="$(curl \
+              --silent \
+              --show-error \
+              --fail \
+              --location \
+              "http://127.0.0.1:8000/api/v1/hello/")"; then
+      
+              SUCCESS=true
+              break
+            fi
+      
+            if ! kill -0 "$FWD_PID" 2>/dev/null; then
+              echo "::error::kubectl port-forward exited"
+              cat /tmp/port-forward.log
+              exit 1
+            fi
+      
+            echo "Attempt ${i}/30 failed; retrying..."
+            sleep 1
+          done
+      
+          if [ "$SUCCESS" != "true" ]; then
+            echo "::error::HTTP smoke test failed"
+      
+            echo "Port-forward log:"
+            cat /tmp/port-forward.log || true
+      
+            exit 1
+          fi
+      
+          echo "HTTP response:"
+          echo "$RESPONSE"
+      
+          echo "$RESPONSE" | grep -q '"status":"ok"'
+      
+          echo "HTTP smoke test passed."
+
+      # ------------------------------------------------------------
+      # 16. Install mkcert
+      #  Generate TLS certificate
+      # ------------------------------------------------------------
+
+      - name: Install mkcert
+        shell: bash
+        run: |
+            if [[ ! -d mkcert ]]; then
+              git clone https://github.com/FiloSottile/mkcert.git
+            fi
+            cd mkcert
+            go build -ldflags "-X main.Version=$(git describe --tags)"
+            ls -l mkcert
+            if [[ ! -x ./mkcert ]]; then
+              echo "mkcert binary does not exits"
+              ls -l
+              exit 1
+            fi
+
+            echo "binary mkcert exist"
+            ls -l mkcert
+            ./mkcert fullstack.dolphin.local
+            
+
+      # ------------------------------------------------------------
+      # 18. Create TLS Secret
+      #
+      # The Gateway in gatewayapi.yaml references:
+      #
+      #   Secret: fullstack-tls
+      #   Namespace: dolphin
+      # ------------------------------------------------------------
+
+      - name: Create Gateway TLS secret
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          kubectl -n "${APP_NAMESPACE}" create secret tls fullstack-tls \
+            --cert=fullstack.dolphin.local.pem \
+            --key=fullstack.dolphin.local-key.pem \
+            --dry-run=client \
+            -o yaml | kubectl apply -f -
+          cd ..
+
+      # ------------------------------------------------------------
+      # 19. Apply Gateway API configuration
+      #
+      # This is the existing configuration from:
+      #
+      # .github/workflows/httpssetup/gatewayapi.yaml
+      # ------------------------------------------------------------
+
+      - name: Apply Gateway configuration
+        run: |
+          kubectl apply \
+            -f .github/workflows/httpssetup/gatewayapi.yaml
+
+      # ------------------------------------------------------------
+      # 20. Show Gateway resources
+      # ------------------------------------------------------------
+
+      - name: Show Gateway resources
+        run: |
+          kubectl get gatewayclass
+          kubectl get gateway -n "${APP_NAMESPACE}" -o wide
+          kubectl get httproute -n "${APP_NAMESPACE}" -o wide
+
+      # ------------------------------------------------------------
+      # 21. Wait for Gateway to become programmed
+      # ------------------------------------------------------------
+
+      - name: Wait for Gateway
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "Waiting for Gateway to become programmed..."
+
+          for i in {1..60}; do
+            PROGRAMMED="$(kubectl get gateway \
+              -n "${APP_NAMESPACE}" \
+              "${GATEWAY_NAME}" \
+              -o jsonpath='{.status.conditions[?(@.type=="Programmed")].status}' \
+              2>/dev/null || true)"
+
+            ADDRESS="$(kubectl get gateway \
+              -n "${APP_NAMESPACE}" \
+              "${GATEWAY_NAME}" \
+              -o jsonpath='{.status.addresses[0].value}' \
+              2>/dev/null || true)"
+
+            echo "Attempt ${i}: PROGRAMMED=${PROGRAMMED} ADDRESS=${ADDRESS}"
+
+            if [ "${PROGRAMMED}" = "True" ] && [ -n "${ADDRESS}" ]; then
+              echo "Gateway is programmed."
+              echo "Gateway address: ${ADDRESS}"
+              echo "GATEWAY_IP=${ADDRESS}" >> "$GITHUB_ENV"
+              break
+            fi
+
+            sleep 2
+          done
+
+          if [ "${PROGRAMMED:-}" != "True" ]; then
+            echo "::error::Gateway did not become programmed"
+
+            kubectl describe gateway \
+              -n "${APP_NAMESPACE}" \
+              "${GATEWAY_NAME}" || true
+
+            kubectl get gateway \
+              -n "${APP_NAMESPACE}" \
+              "${GATEWAY_NAME}" \
+              -o yaml
+
             exit 1
           fi
 
-          echo "Forwarding svc/$SVC 8000:8000"
-          kubectl port-forward "svc/$SVC" 8000:8000 &
-          FWD_PID=$!
-          sleep 5
+          if [ -z "${ADDRESS:-}" ]; then
+            echo "::error::Gateway has no external address"
+            kubectl get gateway \
+              -n "${APP_NAMESPACE}" \
+              "${GATEWAY_NAME}" \
+              -o yaml
+            exit 1
+          fi
 
-          curl -v "http://127.0.0.1:8000/api/v1/hello"
+      # ------------------------------------------------------------
+      # 22. Wait for HTTPRoute to be accepted
+      # ------------------------------------------------------------
 
-          kill $FWD_PID
+      - name: Wait for HTTPRoute
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for i in {1..30}; do
+            ACCEPTED="$(kubectl get httproute \
+              -n "${APP_NAMESPACE}" \
+              fullstack-route \
+              -o jsonpath='{.status.parents[0].conditions[?(@.type=="Accepted")].status}' \
+              2>/dev/null || true)"
+
+            RESOLVED="$(kubectl get httproute \
+              -n "${APP_NAMESPACE}" \
+              fullstack-route \
+              -o jsonpath='{.status.parents[0].conditions[?(@.type=="ResolvedRefs")].status}' \
+              2>/dev/null || true)"
+
+            echo "HttpRoute Attempt ${i}: Accepted=${ACCEPTED} ResolvedRefs=${RESOLVED}"
+
+            if [ "${ACCEPTED}" = "True" ] && [ "${RESOLVED}" = "True" ]; then
+              break
+            fi
+
+            sleep 2
+          done
+
+          if [ "${ACCEPTED:-}" != "True" ]; then
+            echo "::error::HTTPRoute was not accepted"
+            kubectl get httproute \
+              -n "${APP_NAMESPACE}" \
+              fullstack-route \
+              -o yaml
+            exit 1
+          fi
+
+          if [ "${RESOLVED:-}" != "True" ]; then
+            echo "::error::HTTPRoute backend references were not resolved"
+            kubectl get httproute \
+              -n "${APP_NAMESPACE}" \
+              fullstack-route \
+              -o yaml
+            exit 1
+          fi
+
+      # ------------------------------------------------------------
+      # 23. Create ConfigMap containing mkcert CA
+      #
+      # The netshoot pod uses this CA to validate the Gateway's
+      # TLS certificate.
+      # ------------------------------------------------------------
+
+      - name: Create mkcert CA ConfigMap
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          kubectl -n "${APP_NAMESPACE}" create configmap fullstack-mkcert-ca \
+            --from-file=fullstack.dolphin.local.pem=./mkcert/fullstack.dolphin.local.pem \
+            --dry-run=client \
+            -o yaml | kubectl apply -f -
+
+      # ------------------------------------------------------------
+      # 24. HTTPS Gateway verification from inside the cluster
+      #
+      # Important:
+      #
+      # --resolve forces:
+      #
+      #   fullstack.dolphin.local
+      #
+      # to the Gateway external IP while preserving the HTTPS
+      # hostname/SNI.
+      #
+      # The test therefore verifies:
+      #
+      #   netshoot
+      #       |
+      #       v
+      #   Gateway :443
+      #       |
+      #       v
+      #   TLS termination
+      #       |
+      #       v
+      #   HTTPRoute
+      #       |
+      #       v
+      #   fullstack-app Service
+      #       |
+      #       v
+      #   application
+      # ------------------------------------------------------------
+
+      - name: Verify HTTPS Gateway
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cat > /tmp/fullstack-https-test.yaml <<EOF
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            name: fullstack-https-test
+            namespace: ${APP_NAMESPACE}
+          spec:
+            restartPolicy: Never
+            containers:
+              - name: netshoot
+                image: nicolaka/netshoot
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    set -eux
+
+                    echo "Gateway IP: ${GATEWAY_IP}"
+                    echo "Hostname: ${GATEWAY_HOSTNAME}"
+
+                    curl \
+                      --fail \
+                      --show-error \
+                      --verbose \
+                      --cacert /mkcert/fullstack.dolphin.local.pem \
+                      --resolve "${GATEWAY_HOSTNAME}:443:${GATEWAY_IP}" \
+                      "https://${GATEWAY_HOSTNAME}/api/v1/hello"
+
+                volumeMounts:
+                  - name: mkcert-ca
+                    mountPath: /mkcert
+                    readOnly: true
+
+            volumes:
+              - name: mkcert-ca
+                configMap:
+                  name: fullstack-mkcert-ca
+          EOF
+
+          kubectl apply \
+            -f /tmp/fullstack-https-test.yaml
+
+          echo "Waiting for HTTPS test pod..."
+
+          if ! kubectl wait \
+            --for=jsonpath='{.status.phase}'=Succeeded \
+            pod/fullstack-https-test \
+            -n "${APP_NAMESPACE}" \
+            --timeout=120s; then
+
+            echo "::error::HTTPS Gateway test failed"
+
+            kubectl get pod \
+              -n "${APP_NAMESPACE}" \
+              fullstack-https-test \
+              -o wide || true
+
+            kubectl logs \
+              -n "${APP_NAMESPACE}" \
+              fullstack-https-test || true
+
+            exit 1
+          fi
+
+          echo "HTTPS Gateway test passed."
+
+          kubectl logs \
+            -n "${APP_NAMESPACE}" \
+            fullstack-https-test
+
+      # ------------------------------------------------------------
+      # 25. Final verification state
+      # ------------------------------------------------------------
+
+      - name: Show final Gateway state
+        if: always()
+        run: |
+          echo "===== Nodes ====="
+          kubectl get nodes -o wide
+
+          echo "===== Cilium ====="
+          cilium status || true
+
+          echo "===== Pods ====="
+          kubectl get pods -A -o wide
+
+          echo "===== Services ====="
+          kubectl get svc -A -o wide
+
+          echo "===== GatewayClass ====="
+          kubectl get gatewayclass -o wide
+
+          echo "===== Gateway ====="
+          kubectl get gateway \
+            -n "${APP_NAMESPACE}" \
+            -o yaml || true
+
+          echo "===== HTTPRoute ====="
+          kubectl get httproute \
+            -n "${APP_NAMESPACE}" \
+            -o yaml || true
+
+      # ------------------------------------------------------------
+      # 26. Dump logs on failure
+      # ------------------------------------------------------------
 
       - name: Dump logs on failure
         if: failure()
+        shell: bash
         run: |
-          kubectl get pods
-          for p in $(kubectl get pods -l app.kubernetes.io/instance="${{ env.RELEASE_NAME }}" -o name); do
-            echo "== logs: $p =="
-            kubectl logs "$p" --all-containers --tail=200 || true
+          echo "===== Application pods ====="
+
+          kubectl get pods \
+            -n "${APP_NAMESPACE}" \
+            -o wide || true
+
+          for p in $(kubectl get pods \
+            -n "${APP_NAMESPACE}" \
+            -l "app.kubernetes.io/instance=${RELEASE_NAME}" \
+            -o name 2>/dev/null); do
+
+            echo "== logs: ${p} =="
+
+            kubectl logs \
+              -n "${APP_NAMESPACE}" \
+              "${p}" \
+              --all-containers \
+              --tail=200 || true
           done
+
+          echo "===== Gateway ====="
+
+          kubectl describe gateway \
+            -n "${APP_NAMESPACE}" \
+            "${GATEWAY_NAME}" || true
+
+          echo "===== HTTPRoute ====="
+
+          kubectl describe httproute \
+            -n "${APP_NAMESPACE}" \
+            fullstack-route || true
+
+          echo "===== Cilium pods ====="
+
+          kubectl get pods \
+            -n kube-system \
+            -l k8s-app=cilium \
+            -o wide || true
+
+      # ------------------------------------------------------------
+      # 27. Cleanup
+      # ------------------------------------------------------------
+
+      - name: Delete kind cluster
+        if: always()
+        run: |
+          kind delete cluster --name fullstack-ci
