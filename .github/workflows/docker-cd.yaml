@@ -142,6 +142,12 @@ jobs:
         with:
           cluster_name: fullstack-ci
           config: .github/workflows/kind-config.yaml
+      
+      - name: Wait for Kubernetes cluster to be ready
+        run: |
+          kubectl cluster-info --context kind-fullstack-ci
+          kubectl wait --for=condition=Ready nodes --all --timeout=180s
+          kubectl get nodes -o wide
 
       # ------------------------------------------------------------
       # 4. Install Helm
