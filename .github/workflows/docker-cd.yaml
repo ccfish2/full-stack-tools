@@ -141,7 +141,7 @@ jobs:
         uses: helm/kind-action@v1.10.0
         with:
           cluster_name: fullstack-ci
-          config: .github/workflows/kind-cluster.yaml
+          config: .github/workflows/kind-config.yaml
 
       # ------------------------------------------------------------
       # 4. Install Helm
