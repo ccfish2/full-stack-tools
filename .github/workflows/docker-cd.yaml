@@ -173,13 +173,11 @@ jobs:
         run: |
           set -euo pipefail
 
-          kubectl apply \
-            --server-side \
-            -f "https://github.com/kubernetes-sigs/gateway-api/releases/download/${GATEWAY_API_VERSION}/standard-install.yaml"
-
-          kubectl delete crd \
-            tlsroutes.gateway.networking.k8s.io \
-            --ignore-not-found=true
+          kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.4.1/config/crd/standard/gateway.networking.k8s.io_gatewayclasses.yaml
+          kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.4.1/config/crd/standard/gateway.networking.k8s.io_gateways.yaml
+          kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.4.1/config/crd/standard/gateway.networking.k8s.io_httproutes.yaml
+          kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.4.1/config/crd/standard/gateway.networking.k8s.io_referencegrants.yaml
+          kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.4.1/config/crd/standard/gateway.networking.k8s.io_grpcroutes.yaml          
 
       # ------------------------------------------------------------
       # 9. Verify Gateway API CRDs
@@ -231,6 +229,7 @@ jobs:
           helm install cilium cilium/cilium \
             --version "${CILIUM_VERSION}" \
             --namespace kube-system \
+            --set kubeProxyReplacement=true \
             --set gatewayAPI.enabled=true \
             --set-string gatewayAPI.gatewayClass.create=true \
             --set operator.replicas=1 \
