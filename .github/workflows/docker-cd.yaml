@@ -315,7 +315,6 @@ jobs:
           LB_START="${PREFIX}.100"
           LB_STOP="${PREFIX}.110"
 
-          echo "KIND IPv4 subnet: ${IPV4_SUBNET}"
           echo "Cilium LB-IPAM range:"
           echo "  start: ${LB_START}"
           echo "  stop:  ${LB_STOP}"
