@@ -366,7 +366,5 @@ MIT
 ## Next Steps
 
 - Add authentication (JWT tokens) for the API
-- Remove or revive the legacy Express frontend
 - Add unit/integration tests for the SSE and Celery flows
-- Deploy to cloud (AWS, GCP, Azure)
 - Add monitoring for the Celery worker and Redis
