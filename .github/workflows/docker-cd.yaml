@@ -449,7 +449,6 @@ jobs:
       #
       # No Gateway / TLS involved yet.
       # ------------------------------------------------------------
-
       - name: HTTP smoke test
         shell: bash
         run: |
@@ -458,68 +457,77 @@ jobs:
           SVC="$(kubectl get svc \
             -n "${APP_NAMESPACE}" \
             -o name | grep "^service/${RELEASE_NAME}$" || true)"
-      
+
           if [ -z "$SVC" ]; then
             echo "::error::Service ${RELEASE_NAME} not found"
             kubectl get svc -n "${APP_NAMESPACE}" --show-labels
             exit 1
           fi
-      
+
           echo "Using ${SVC}"
-      
-          kubectl port-forward \
-            -n "${APP_NAMESPACE}" \
-            "${SVC}" \
-            8000:8000 >/tmp/port-forward.log 2>&1 &
-      
-          FWD_PID=$!
-      
+
+          start_forward() {
+            kubectl port-forward \
+              -n "${APP_NAMESPACE}" \
+              "${SVC}" \
+              8000:8000 >>/tmp/port-forward.log 2>&1 &
+            FWD_PID=$!
+          }
+
           cleanup() {
             kill "$FWD_PID" 2>/dev/null || true
           }
-      
           trap cleanup EXIT
-      
-          echo "Waiting for port-forward and HTTP endpoint..."
-      
+
+          start_forward
+
+          # Give the pod a startup grace period before hammering it —
+          # mirrors the old step's `sleep 5`, bumped up since we no
+          # longer have a readinessProbe gating rollout status.
+          echo "Initial grace period before first attempt..."
+          sleep 10
+
+          echo "Waiting for HTTP endpoint..."
           SUCCESS=false
-      
-          for i in {1..30}; do
+
+          for i in {1..40}; do
+            if ! kill -0 "$FWD_PID" 2>/dev/null; then
+              echo "port-forward died (attempt ${i}) — restarting it"
+              cat /tmp/port-forward.log
+              start_forward
+              sleep 2
+            fi
+
             if RESPONSE="$(curl \
               --silent \
               --show-error \
               --fail \
               --location \
+              --max-time 5 \
               "http://127.0.0.1:8000/api/v1/hello/")"; then
-      
+
               SUCCESS=true
               break
             fi
-      
-            if ! kill -0 "$FWD_PID" 2>/dev/null; then
-              echo "::error::kubectl port-forward exited"
-              cat /tmp/port-forward.log
-              exit 1
-            fi
-      
-            echo "Attempt ${i}/30 failed; retrying..."
-            sleep 1
+
+            echo "Attempt ${i}/40 failed; retrying..."
+            sleep 2
           done
-      
+
           if [ "$SUCCESS" != "true" ]; then
-            echo "::error::HTTP smoke test failed"
-      
+            echo "::error::HTTP smoke test failed after all retries"
             echo "Port-forward log:"
             cat /tmp/port-forward.log || true
-      
+            echo "Django pod logs:"
+            kubectl logs -n "${APP_NAMESPACE}" -l app=django --tail=100 --timestamps || true
+            echo "Pod status:"
+            kubectl get pods -n "${APP_NAMESPACE}" -l app=django -o wide || true
             exit 1
           fi
-      
+
           echo "HTTP response:"
           echo "$RESPONSE"
-      
           echo "$RESPONSE" | grep -q '"status":"ok"'
-      
           echo "HTTP smoke test passed."
 
       # ------------------------------------------------------------
