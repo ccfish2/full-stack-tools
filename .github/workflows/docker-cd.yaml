@@ -85,7 +85,7 @@ env:
   # Kubernetes / CNI versions
   KIND_NODE_IMAGE: kindest/node:v1.31.0
   CILIUM_VERSION: "1.19.6"
-  GATEWAY_API_VERSION: "v1.5.0"
+  # https://docs.cilium.io/en/v1.19/network/servicemesh/gateway-api/gateway-api/
 
   # Gateway configuration
   APP_NAMESPACE: dolphin
