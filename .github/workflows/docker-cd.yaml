@@ -143,11 +143,11 @@ jobs:
           cluster_name: fullstack-ci
           config: .github/workflows/kind-config.yaml
       
-      - name: Wait for Kubernetes cluster to be ready
+      - name: Verify API server reachable
         run: |
           kubectl cluster-info --context kind-fullstack-ci
-          kubectl wait --for=condition=Ready nodes --all --timeout=180s
-          kubectl get nodes -o wide
+          # expect NotReady here, that's fine
+          kubectl get nodes -o wide   
 
       # ------------------------------------------------------------
       # 4. Install Helm
@@ -236,6 +236,26 @@ jobs:
             --set operator.replicas=1 \
             --wait \
             --timeout 10m
+      
+      - name: Install Cilium CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          CILIUM_CLI_VERSION=$(curl -s https://raw.githubusercontent.com/cilium/cilium-cli/main/stable.txt)
+          curl -L --fail --remote-name-all \
+            "https://github.com/cilium/cilium-cli/releases/download/${CILIUM_CLI_VERSION}/cilium-linux-amd64.tar.gz"
+          sudo tar xzvfC cilium-linux-amd64.tar.gz /usr/local/bin
+
+      - name: Wait for Cilium to be fully healthy
+        run: cilium status --wait --wait-duration 5m
+
+      # NOW it's safe/meaningful to wait for node readiness —
+      # CNI is up, so kubelet can clear the NetworkUnavailable condition.
+      - name: Wait for nodes to be Ready
+        run: |
+          echo "CNI is up, the cluster is expected in READY status"
+          kubectl wait --for=condition=Ready nodes --all --timeout=180s
+          kubectl get nodes -o wide
 
       # ------------------------------------------------------------
       # 11. Verify Cilium + Gateway API
@@ -317,6 +337,8 @@ jobs:
           echo "CiliumLoadBalancerIPPool:"
           kubectl get ciliuml2announcement 2>/dev/null || true
           kubectl get ciliumloadbalancerippool kind-gateway-pool -o yaml
+          kubectl wait --for=jsonpath='{.status.conditions[?(@.type=="conflicting")].status}'=False \
+          ciliumloadbalancerippool/kind-gateway-pool --timeout=30s || true
 
       # ------------------------------------------------------------
       # 10. Create application namespace
@@ -796,6 +818,9 @@ jobs:
       - name: Show final Gateway state
         if: always()
         run: |
+          echo "===== Cilium ====="
+          cilium status || true
+
           echo "===== Nodes ====="
           kubectl get nodes -o wide
 
