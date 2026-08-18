@@ -386,11 +386,12 @@ jobs:
           set -euo pipefail
 
           helm install "${RELEASE_NAME}" "${CHART_NAME}" \
-            --namespace "${APP_NAMESPACE}" \
-            --set image.repository="${IMAGE_REPO}" \
-            --set image.tag="${{ steps.tag.outputs.tag }}" \
-            --wait \
-            --timeout 120s
+          --namespace "${APP_NAMESPACE}" \
+          --set image.repository="${IMAGE_REPO}" \
+          --set image.tag="${{ steps.tag.outputs.tag }}" \
+          --version 0.1.8 \
+          --wait \
+          --timeout 120s
 
       # ------------------------------------------------------------
       # 13. Show cluster state
