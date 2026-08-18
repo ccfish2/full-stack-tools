@@ -533,6 +533,12 @@ jobs:
       # ------------------------------------------------------------
       # 16. Install mkcert
       #  Generate TLS certificate
+      #   Create TLS Secret
+      #
+      # The Gateway in gatewayapi.yaml references:
+      #
+      #   Secret: fullstack-tls
+      #   Namespace: dolphin
       # ------------------------------------------------------------
 
       - name: Install mkcert
@@ -554,27 +560,14 @@ jobs:
             ls -l mkcert
             ./mkcert fullstack.dolphin.local
             
+            echo "generate tls secret"
+            kubectl -n "${APP_NAMESPACE}" create secret tls fullstack-tls \
+              --cert="./fullstack.dolphin.local.pem" \
+              --key="./fullstack.dolphin.local-key.pem" \
+              --dry-run=client \
+              -o yaml | kubectl apply -f -
 
-      # ------------------------------------------------------------
-      # 18. Create TLS Secret
-      #
-      # The Gateway in gatewayapi.yaml references:
-      #
-      #   Secret: fullstack-tls
-      #   Namespace: dolphin
-      # ------------------------------------------------------------
-
-      - name: Create Gateway TLS secret
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          kubectl -n "${APP_NAMESPACE}" create secret tls fullstack-tls \
-            --cert=fullstack.dolphin.local.pem \
-            --key=fullstack.dolphin.local-key.pem \
-            --dry-run=client \
-            -o yaml | kubectl apply -f -
-          cd ..
+            cd ..
 
       # ------------------------------------------------------------
       # 19. Apply Gateway API configuration
