@@ -305,18 +305,17 @@ jobs:
         run: |
           set -euo pipefail
 
-          KIND_SUBNET="$(
-            docker network inspect kind \
-              -f '{{range .IPAM.Config}}{{.Subnet}}{{end}}'
-          )"
+          # Extract IPv4 CIDR from KIND_SUBNET
+          subnet=$(docker network inspect kind | jq -r '.[0].IPAM.Config[] | select(.Subnet | test("^\\d+\\.\\d+\\.\\d+\\.\\d+/\\d+$")) | .Subnet')
 
-          echo "Kind Docker subnet: ${KIND_SUBNET}"
-
-          PREFIX="$(echo "${KIND_SUBNET}" | cut -d. -f1-3)"
+          # Get the IP prefix (first three octets)
+          PREFIX=$(echo "$subnet" | cut -d. -f1-3)
+          echo $PREFIX
 
           LB_START="${PREFIX}.100"
           LB_STOP="${PREFIX}.110"
 
+          echo "KIND IPv4 subnet: ${IPV4_SUBNET}"
           echo "Cilium LB-IPAM range:"
           echo "  start: ${LB_START}"
           echo "  stop:  ${LB_STOP}"
@@ -336,8 +335,24 @@ jobs:
           echo "CiliumLoadBalancerIPPool:"
           kubectl get ciliuml2announcement 2>/dev/null || true
           kubectl get ciliumloadbalancerippool kind-gateway-pool -o yaml
-          kubectl wait --for=jsonpath='{.status.conditions[?(@.type=="conflicting")].status}'=False \
-          ciliumloadbalancerippool/kind-gateway-pool --timeout=30s || true
+
+          echo "Waiting for Cilium LB-IPAM..."
+
+          for i in {1..30}; do
+              IPS_AVAILABLE="$(
+                  kubectl get ciliumloadbalancerippool kind-gateway-pool \
+                      -o jsonpath='{range .status.conditions[?(@.type=="cilium.io/IPsAvailable")]}{.message}{end}' \
+                      2>/dev/null || true
+              )"
+
+              if [[ "${IPS_AVAILABLE}" =~ ^[1-9][0-9]*$ ]]; then
+                  echo "Cilium LB-IPAM ready: ${IPS_AVAILABLE} IPs available."
+                  break
+              fi
+
+              echo "  IPs available: ${IPS_AVAILABLE:-Unknown}"
+              sleep 1
+          done
 
       # ------------------------------------------------------------
       # 10. Create application namespace
@@ -760,7 +775,7 @@ jobs:
                     echo "Gateway IP: ${GATEWAY_IP}"
                     echo "Hostname: ${GATEWAY_HOSTNAME}"
 
-                    curl \
+                    curl -L \
                       --fail \
                       --show-error \
                       --verbose \
