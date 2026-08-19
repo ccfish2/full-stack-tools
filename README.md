@@ -201,8 +201,8 @@ npm run build
 ## Usage
 
 1. **Access the app**: Open <http://localhost:8000> in your browser (Django serves the app shell; in dev it proxies to the Vite client)
-2. **Trigger an SSE event**: `POST /api/trigger-events` — the client's `useSSE` hook, connected via `EventSource`, receives it in real time
-3. **Manage feature flag records**: use `/api/statsigfeatureflag` or the Django admin at `/admin/`
+2. **Trigger an SSE event**: `POST /api/v1/trigger-events` — the client's `useSSE` hook, connected via `EventSource`, receives it in real time
+3. **Manage feature flag records**: use `/api/v1/statsigfeatureflag` or the Django admin at `/admin/`
 
 ## Environment Variables
 
@@ -288,10 +288,10 @@ docker-compose exec db psql -U postgres -d statsig_db
 │ Code                     │ URL                          │
 ├──────────────────────────┼──────────────────────────────┤
 │ API_BASE                 │ /api                         │
-│ fetcher("/events/")      │ /api/events/                 │
-│ fetcher("/statsig...")   │ /api/statsigfeatureflag      │
-│ fetcher("/trigger...")   │ /api/trigger-events           │
-│ SSE                      │ /api/events/?channel=global   │
+│ fetcher("/events/")      │ /api/v1/events/                 │
+│ fetcher("/statsig...")   │ /api/v1/statsigfeatureflag      │
+│ fetcher("/trigger...")   │ /api/v1/trigger-events           │
+│ SSE                      │ /api/v1/events/?channel=global   │
 └──────────────────────────┴──────────────────────────────┘
 
 ## Testing the API
@@ -301,15 +301,15 @@ docker-compose exec db psql -U postgres -d statsig_db
 docker-compose down && docker-compose up --build -d && sleep 15
 
 # Hello endpoint
-curl http://localhost:8000/api/hello/
+curl http://localhost:8000/api/v1/hello/
 
 # Create a feature flag record
-curl -X POST http://localhost:8000/api/statsigfeatureflag \
+curl -X POST http://localhost:8000/api/v1/statsigfeatureflag \
   -H "Content-Type: application/json" \
   -d '{"product": "checkout", "environment": "stage"}'
 
 # Trigger an SSE event
-curl -X POST http://localhost:8000/api/trigger-events \
+curl -X POST http://localhost:8000/api/v1/trigger-events \
   -H "Content-Type: application/json" \
   -d '{"channel": "global", "event_type": "message", "payload": {"hello": "world"}}'
 ```
@@ -320,7 +320,7 @@ curl -X POST http://localhost:8000/api/trigger-events \
 import requests
 
 response = requests.post(
-    'http://localhost:8000/api/statsigfeatureflag',
+    'http://localhost:8000/api/v1/statsigfeatureflag',
     json={'product': 'checkout', 'environment': 'stage'}
 )
 print(response.json())
@@ -350,13 +350,12 @@ print(response.json())
 
 | Component | Technology |
 | --- | --- |
-| Backend API | Django 6.0, Django REST Framework |
+| Backend API | Django 6.0.1, Django REST Framework |
 | ASGI Server | Daphne |
 | Real-time | django-eventstream (SSE) over Redis |
 | Background Tasks | Celery + Redis (SSE publishing), django-tasks-db (email queue) |
 | Database | PostgreSQL 15 (Docker) / SQLite (local dev default) |
 | Frontend Client | React 18 + TypeScript + Vite, integrated via django-vite |
-| Legacy Frontend | Express + TypeScript (present in repo, not run by docker-compose) |
 | Containerization | Docker + Docker Compose |
 
 ## License
@@ -367,4 +366,3 @@ MIT
 
 - Add authentication (JWT tokens) for the API
 - Add unit/integration tests for the SSE and Celery flows
-- Add monitoring for the Celery worker and Redis
