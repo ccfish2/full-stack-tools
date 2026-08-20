@@ -201,6 +201,7 @@ http://127.0.0.1:8000/api/v2
 
 ### OpenAPI
 ```
+http://localhost:8000/admin/
 http://127.0.0.1:8000/api/v1/docs
 cd backend
 python3.13 manage.py spectacular --file openapi-schema.yaml

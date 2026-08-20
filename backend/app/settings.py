@@ -10,8 +10,9 @@ DEBUG = True
 ALLOWED_HOSTS = ["127.0.0.1", "localhost", "backend", "*"]
 
 INSTALLED_APPS = [
-    "daphne",
     "corsheaders",
+    "daphne",
+   
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -117,8 +118,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CORS_ALLOW_ALL_ORIGINS = True
 
 REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly"
+        "rest_framework.permissions.IsAuthenticated"
     ],
 
     "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.URLPathVersioning",
@@ -170,3 +174,7 @@ TASKS = {
         "QUEUES": ["default", "emails"], 
     }
 }
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8000",
+]

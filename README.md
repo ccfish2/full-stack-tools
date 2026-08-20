@@ -364,5 +364,4 @@ MIT
 
 ## Next Steps
 
-- Add authentication (JWT tokens) for the API
 - Add unit/integration tests for the SSE and Celery flows

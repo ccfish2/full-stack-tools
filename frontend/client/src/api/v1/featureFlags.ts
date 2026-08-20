@@ -2,8 +2,9 @@ import { fetcher, post } from "../client";
 
 export type StatsigFlag = {
   id: number;
-  key: string;
-  key2: string;
+  product: string;
+  environment: string;
+  last_checksum: string;
   created_at: string;
 };
 
@@ -13,8 +14,9 @@ export const getFeatureFlags = () =>
   );
 
 export const createFeatureFlag = (data: {
-  key: string;
-  key2: string;
+  product: string;
+  environment: string;
+  last_checksum: string;
 }) =>
   post<StatsigFlag>(
     "/v1/statsigfeatureflag",

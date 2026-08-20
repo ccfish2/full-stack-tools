@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from core.api.v1.views import grant_user_token
 from core.views import index
 import django_eventstream
 
@@ -8,6 +10,9 @@ urlpatterns = [
     path("", index),
     path("admin/", admin.site.urls),
     path("api_auth/", include("rest_framework.urls")),
+    path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("api/token/grant/", grant_user_token, name="token_grant"),
     path("api/events/", django_eventstream.views.events, {"channels": ["global"]}),
     path("__reload__/", include("django_browser_reload.urls")),
 

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from core.api.v1.views import StatsigViewSet, SSEEventViewSet, hello, email_notification
+from core.api.v1.views import StatsigViewSet, SSEEventViewSet, hello, email_notification, current_user, create_user
 import django_eventstream
 
 router = DefaultRouter(trailing_slash=False)
@@ -16,6 +16,8 @@ router.register(r"trigger-events",
 
 urlpatterns = [
     path("hello/", hello),
+    path("user/", current_user),
+    path("users/", create_user),
     path("publishmsg/", email_notification),
 
     # include router URLs
