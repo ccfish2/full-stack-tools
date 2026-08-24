@@ -22,6 +22,13 @@ class SimpleTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"message": "Hello from Django backend", "status": "ok"})
 
+    def test_authenticated_session_can_open_browsable_api_root(self):
+        self.assertTrue(self.client.login(username="readonly_user", password="readonly-pass-123"))
+
+        response = self.client.get("/api/v1/")
+
+        self.assertEqual(response.status_code, 200)
+
     def test_readonly_user_can_read_but_not_mutate_feature_flags(self):
         self.client.force_authenticate(user=self.readonly_user)
 

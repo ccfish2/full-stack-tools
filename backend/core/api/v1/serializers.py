@@ -4,7 +4,6 @@ from core.models import StatsigApplication, SSEEvent, StatsigMetadataSnapShots
 
 User = get_user_model()
 
-
 class StatsigMetadataSnapshotSerializer(serializers.ModelSerializer):
     class Meta:
         model = StatsigMetadataSnapShots

@@ -1,18 +1,18 @@
 import os
 from pathlib import Path
 
+
+# Project paths and security
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 SECRET_KEY = "django-insecure-replace-me-with-a-secure-key"
-
 DEBUG = True
-
 ALLOWED_HOSTS = ["127.0.0.1", "localhost", "backend", "*"]
 
+
+# Django applications
 INSTALLED_APPS = [
     "corsheaders",
     "daphne",
-   
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -25,21 +25,12 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_browser_reload",
     "django_vite",
-
     "drf_spectacular",
     "drf_spectacular_sidecar",
 ]
 
-DJANGO_VITE = {
-    "default": {
-        "dev_mode": DEBUG,               # True in dev -> proxies to Vite dev server
-        "dev_server_port": 5173,          # Vite's default port
-        "manifest_path": BASE_DIR / "static" / "dist" / ".vite" / "manifest.json",
-        "static_url_prefix": "dist",
-    }
-}
 
-ASGI_APPLICATION = "app.asgi.application"
+# Request handling and project entry points
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
@@ -51,8 +42,10 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django_browser_reload.middleware.BrowserReloadMiddleware",
 ]
-
 ROOT_URLCONF = "app.urls"
+ASGI_APPLICATION = "app.asgi.application"
+WSGI_APPLICATION = "app.wsgi.application"
+
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -69,10 +62,8 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "app.wsgi.application"
 
-# Local dev (no env vars set) -> SQLite, no separate DB container needed.
-# docker-compose sets DB_ENGINE + DB_HOST/DB_PORT/etc, so containers still use Postgres.
+# Database: SQLite locally, PostgreSQL when DB_ENGINE is configured.
 if os.getenv("DB_ENGINE"):
     DATABASES = {
         "default": {
@@ -92,6 +83,8 @@ else:
         }
     }
 
+
+# Authentication and internationalization
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
@@ -106,37 +99,47 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
-
+LOGIN_REDIRECT_URL = "/api/v1/"
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
+
+# Static files and default model settings
 STATIC_URL = "/static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-CORS_ALLOW_ALL_ORIGINS = True
 
+# Cross-origin requests
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8000",
+]
+
+
+# Django REST Framework
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.IsAuthenticated"
+        "rest_framework.permissions.IsAuthenticated",
     ],
-
     "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.URLPathVersioning",
     "DEFAULT_VERSION": "v1",
     "ALLOWED_VERSIONS": ["v1", "v2"],
     "VERSION_PARAM": "version",
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
-        "rest_framework.renderers.BrowsableAPIRenderer",  # verify in-browser
+        "rest_framework.renderers.BrowsableAPIRenderer",
     ],
-
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
+
+# OpenAPI schema and documentation
 SPECTACULAR_SETTINGS = {
     "TITLE": "Statsig Full-Stack API",
     "DESCRIPTION": "REST API for the Statsig feature-flag prototype...",
@@ -149,32 +152,38 @@ SPECTACULAR_SETTINGS = {
     "SORT_OPERATIONS": False,
 }
 
-# provided through charts deployment
+
+# Vite integration for the React client
+DJANGO_VITE = {
+    "default": {
+        "dev_mode": DEBUG,
+        "dev_server_port": 5173,
+        "manifest_path": BASE_DIR / "static" / "dist" / ".vite" / "manifest.json",
+        "static_url_prefix": "dist",
+    }
+}
+
+
+# Redis, Celery, SSE, and database-backed tasks
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
-
-CELERY_BROKER_URL = f"redis://{os.environ.get('REDIS_HOST', 'localhost')}:6379/0"
-CELERY_RESULT_BACKEND= f"redis://{os.environ.get('REDIS_HOST', 'localhost')}:6379/0"
+CELERY_BROKER_URL = f"redis://{REDIS_HOST}:6379/0"
+CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:6379/0"
 
 EVENTSTREAM_REDIS = {
-    "host": os.environ.get('REDIS_HOST', 'localhost'),
+    "host": REDIS_HOST,
     "port": 6379,
     "db": 0,
 }
-
 EVENTSTREAM_STORAGE_CLASS = "django_eventstream.storage.RedisStorage"
 EVENTSTREAM_STORAGE_CONNECTION = {
-    "host": os.environ.get('REDIS_HOST', 'localhost'),
+    "host": REDIS_HOST,
     "port": 6379,
 }
 
 TASKS = {
     "default": {
         "BACKEND": "django_tasks_db.DatabaseBackend",
-        "QUEUES": ["default", "emails"], 
+        "QUEUES": ["default", "emails"],
     }
 }
-
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8000",
-]

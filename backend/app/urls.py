@@ -1,10 +1,12 @@
 from django.contrib import admin
 from django.urls import include, path
-from rest_framework.routers import DefaultRouter
+import django_eventstream
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from core.api.v1.views import grant_user_token
 from core.views import index
-import django_eventstream
+
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
+
 
 urlpatterns = [
     path("", index),
@@ -21,7 +23,6 @@ urlpatterns = [
     path("api/v2/", include(("core.api.v2.urls", "core"), namespace="v2")),
 ]
 
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 # OpenAPI swagger doc and redoc
 urlpatterns += [
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),

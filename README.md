@@ -2,6 +2,22 @@
 
 A full-stack prototype: a Django backend (REST API + Server-Sent Events + Celery background tasks) with a React/TypeScript client built with Vite, PostgreSQL/Redis in Docker Compose.
 
+## Screenshots
+
+### Frontend dashboard
+
+The Vite client provides a dashboard for creating users, publishing feature flag records, and monitoring the live SSE connection.
+
+<p align="center">
+  <img src="docs/images/frontend-dashboard.png" alt="Frontend dashboard" width="900">
+</p>
+
+### Backend architecture
+
+<p align="center">
+  <img src="docs/images/backend-architecture.png" alt="Backend architecture" width="900">
+</p>
+
 ## Project Structure
 
 ```
