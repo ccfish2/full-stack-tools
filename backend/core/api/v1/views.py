@@ -14,8 +14,14 @@ from core.tasks import publish_sse_event, email_users
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, BasePermission, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
-from drf_spectacular.utils import extend_schema
+from django.utils.dateparse import parse_datetime
+from rest_framework.exceptions import ValidationError
+from drf_spectacular.utils import (extend_schema,
+                                   OpenApiParameter,
+                                   OpenApiTypes,
+                                   extend_schema_view)
 from rest_framework_simplejwt.tokens import AccessToken
+
 
 User = get_user_model()
 
@@ -103,6 +109,29 @@ class SSEEventViewSet(viewsets.ModelViewSet):
         instance = serializer.save()
         publish_sse_event.delay(instance.channel, instance.event_type, instance.payload)
 
+@extend_schema_view(
+    list=extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="environment",
+                type=OpenApiTypes.STR,
+                location = OpenApiParameter.QUERY,
+                required=False,
+                enum=["prod","stage","dev"],
+                description="Filter feature flag through input environment"
+            ),
+
+            OpenApiParameter(
+                            name="updated_at",
+                            type=OpenApiTypes.DATETIME,
+                            location = OpenApiParameter.QUERY,
+                            required=False,
+                            enum=["prod","stage","dev"],
+                            description="Return records updated at or after this ISO-8601 timestamp."
+                        ),
+        ]
+    )
+)
 class StatsigViewSet(viewsets.ModelViewSet):
     """
     POST /api/v1/statsigfeatureflag post product, environment, checksum and associated feature into the system 
@@ -112,7 +141,29 @@ class StatsigViewSet(viewsets.ModelViewSet):
     permission_classes = [IsReadOnlyOrAdmin]
 
     def get_queryset(self):
-        return StatsigApplication.objects.all()
+        queryset=(
+            StatsigApplication.objects
+            .prefetch_related("snapshots")
+            .order_by("-updated_at")
+        )
+
+        environment = self.request.query_params.get("environment")
+        updated_at = self.request.query_params.get("updated_at")
+
+        if environment:
+            queryset = queryset.filter(environment=environment)
+
+        if updated_at:
+            parsed_updated_at=parse_datetime(updated_at)
+
+            if parsed_updated_at is None:
+                raise ValidationError({
+                    "updated_at": "Use a valid ISO-8601 datetime"
+                })
+            queryset = queryset.filter(updated_at=parsed_updated_at)
+        return queryset
+
+    
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])

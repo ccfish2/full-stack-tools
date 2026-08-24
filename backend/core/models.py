@@ -26,6 +26,18 @@ class StatsigApplication(models.Model):
     def __str__(self):
         return f"{self.product} ({self.environment})"
 
+class StatsigMetadataSnapShots(models.Model):
+    statsig_flag = models.ForeignKey(
+        StatsigApplication, 
+        on_delete=models.CASCADE,
+        related_name="snapshots",
+    )
+    timestamp = models.DateTimeField() # the created timestamp of this snapshots
+    metadata = models.JSONField() # json blob of all metata
+
+    def __str__(self):
+        return f"{self.statsig_flag.product} @{self.timestamp}"
+
 class SSEEvent(models.Model):
     """
     Every trigger is persisted here (via SSEEventViewSet.perform_create),
@@ -42,15 +54,3 @@ class SSEEvent(models.Model):
 
     def __str__(self):
         return f"SSEEvent({self.channel}, {self.event_type}) #{self.id}"
-
-class StatsigMetadataSnapShots(models.Model):
-    statsig_flag = models.ForeignKey(
-        StatsigApplication, 
-        on_delete=models.CASCADE,
-        related_name="snapshots",
-    )
-    timestamp = models.DateTimeField() # the created timestamp of this snapshots
-    metadata = models.JSONField() # json blob of all metata
-
-    def __str__(self):
-        return f"{self.statsig_flag.product} @{self.timestamp}"
