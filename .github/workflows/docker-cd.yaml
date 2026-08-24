@@ -389,7 +389,7 @@ jobs:
           --namespace "${APP_NAMESPACE}" \
           --set image.repository="${IMAGE_REPO}" \
           --set image.tag="${{ steps.tag.outputs.tag }}" \
-          --version 0.1.8 \
+          --version 0.1.9 \
           --wait \
           --timeout 120s
 
