@@ -49,7 +49,7 @@ sleep 10
 # Check if backend is responding
 echo -e "${YELLOW}4. Checking backend status...${NC}"
 for i in {1..30}; do
-    if curl -s http://localhost:8000/api/hello/ > /dev/null; then
+    if curl -s http://localhost:8000/api/v1/hello/ > /dev/null; then
         echo -e "${GREEN}✓ Backend is ready${NC}"
         break
     fi

@@ -12,6 +12,7 @@ RUN addgroup --system app && \
     adduser --system --ingroup app app
 
 WORKDIR /app
+
 COPY requirements.txt .
 
 RUN pip install --upgrade pip && \
@@ -24,4 +25,4 @@ RUN chmod +x /app/entrypoint.sh && \
     chown -R app:app /app
 
 USER app
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT ["bash", "/app/entrypoint.sh"]

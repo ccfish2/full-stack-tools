@@ -124,7 +124,6 @@ docker-compose up --build
 ### Port already in use
 ```bash
 # Kill process on port 9090
-lsof -i :9090
 kill -9 <PID>
 
 # Change port in docker-compose.yml if needed
@@ -158,12 +157,7 @@ kill -9 <PID>
 ```
 
 ## 12. Next Steps
-
-- Check [README.md](README.md) for detailed documentation
-- Explore the admin panel at http://localhost:8000/admin/
-- Customize the frontend in `frontend/public/index.html`
-- Add more endpoints in `backend/core/views.py`
-- Deploy to cloud using the Docker images
+- TBD
 
 ## 13. Development Mode
 
@@ -212,7 +206,6 @@ the generated schema can be used as contract among microservices
 
 - Django docs: https://docs.djangoproject.com/
 - PostgreSQL docs: https://www.postgresql.org/docs/
-- Express docs: https://expressjs.com/
 - Docker docs: https://docs.docker.com/
 
 ---
