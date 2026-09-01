@@ -22,19 +22,48 @@ The Vite client provides a dashboard for creating users, publishing feature flag
 
 ```
 .
-├── backend/                  # Django backend
-│   ├── app/                  # Project config (settings, urls, asgi, celery)     
-│   ├── core/                 # Main app: models, views, serializers, Celery tasks
-          api
-            v1/               # Django v1 contract
-            v2/               # Django v2 contract
-          migrations
-│   ├── templates/            # index.html (mounts the React client via django-vite)
-│   ├── static/dist/          # Built client assets (generated, served by Django)
-│   ├── entrypoint.sh         # Migrates DB, seeds a superuser, starts Daphne (ASGI)
-│   └── requirements.txt      # Python dependencies
-        Dockerfile
-        manage.py
+├── backend
+│   ├── app
+│   │   ├── __init__.py
+│   │   ├── asgi.py
+│   │   ├── celery.py
+│   │   ├── settings.py
+│   │   ├── urls.py
+│   │   └── wsgi.py
+│   ├── certs
+│   │   └── generate-cert.sh
+│   ├── core
+│   │   ├── __init__.py
+│   │   ├── admin.py
+│   │   ├── api
+│   │   │   ├── v1
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── serializers.py
+│   │   │   │   ├── urls.py
+│   │   │   │   └── views.py
+│   │   │   └── v2
+│   │   │       ├── __init__.py
+│   │   │       ├── serializers.py
+│   │   │       ├── urls.py
+│   │   │       └── views.py
+│   │   ├── apps.py
+│   │   ├── migrations
+│   │   │   ├── __init__.py
+│   │   │   ├── 0001_initial.py
+│   │   │   ├── 0002_sseevent.py
+│   │   │   └── 0003_remove_statsigapplication_data_and_more.py
+│   │   ├── models.py
+│   │   ├── tasks.py
+│   │   ├── tests.py
+│   │   └── views.py
+│   ├── db.sqlite3
+│   ├── Dockerfile
+│   ├── entrypoint.sh
+│   ├── manage.py
+│   ├── requirements.txt
+│   └── templates
+│       └── index.html
+├── docker-compose.yml
 ├── frontend/
 │   ├── client/                # React + Vite + TypeScript SSE client (active frontend)
 │   │   └── src/
