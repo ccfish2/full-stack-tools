@@ -138,7 +138,7 @@ Any client subscribed to `GET /api/events/?channel=global` will receive it once 
 ### Example: create a feature flag record
 
 ```bash
-curl -X POST http://localhost:8000/api/statsigfeatureflag \
+curl -X POST http://localhost:8000/api/v1/statsigfeatureflag \
   -H "Content-Type: application/json" \
   -d '{"product": "checkout", "environment": "stage"}'
 ```
