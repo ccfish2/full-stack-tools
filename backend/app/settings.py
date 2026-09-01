@@ -113,10 +113,13 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Cross-origin requests
 CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8000",
+    "http://localhost:8000",     
+    "http://localhost:5173",
 ]
 
+CSRF_TRUSTED_ORIGINS = ["http://localhost:5173", "http://localhost:8000"]
 
 # Django REST Framework
 REST_FRAMEWORK = {

@@ -4,6 +4,7 @@ import django_eventstream
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from core.api.v1.views import grant_user_token
 from core.views import index
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
@@ -37,3 +38,5 @@ urlpatterns += [
     path("api/v2/docs/", SpectacularSwaggerView.as_view(url_name="schema-v2"), name="swagger-ui-v2"),
     path("api/v2/redoc/", SpectacularRedocView.as_view(url_name="schema-v2"), name="redoc-v2"),
 ]
+
+urlpatterns += staticfiles_urlpatterns()
