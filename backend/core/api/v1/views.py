@@ -21,6 +21,7 @@ from drf_spectacular.utils import (extend_schema,
                                    OpenApiTypes,
                                    extend_schema_view)
 from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework.decorators import action
 
 
 User = get_user_model()
@@ -163,8 +164,6 @@ class StatsigViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(updated_at=parsed_updated_at)
         return queryset
 
-    
-
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def current_user(request):
@@ -176,6 +175,59 @@ def current_user(request):
         "is_superuser": request.user.is_superuser,
     })
 
+from rest_framework.viewsets import ViewSet
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from core.api.v1.serializers import UserCreateSerializer, UserListSerializer
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+class UserViewSet(ViewSet):
+    """
+    /api/v1/users/           - list all users (GET), create user (POST)
+    /api/v1/users/current/   - get current user (GET)
+    """
+    queryset = User.objects.all()  # ← Add this
+    serializer_class = UserListSerializer
+    permission_classes = [IsAdminUser]
+    
+    def get_serializer_class(self):
+        """Use different serializers for different actions"""
+        if self.action == 'create':
+            return UserCreateSerializer
+        return UserListSerializer
+    
+    def list(self, request):
+        """GET /users/ - List all users"""
+        users = User.objects.all().order_by("username")
+        serializer = self.get_serializer_class()(users, many=True)
+        return Response(serializer.data)
+    
+    def create(self, request):
+        """POST /users/ - Create a new user"""
+        serializer = self.get_serializer_class()(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response({
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "is_staff": user.is_staff,
+            "is_superuser": user.is_superuser,
+        }, status=201)
+    
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def current(self, request):
+        """GET /users/current/ - Get current authenticated user"""
+        return Response({
+            "id": request.user.id,
+            "username": request.user.username,
+            "email": request.user.email,
+            "is_staff": request.user.is_staff,
+            "is_superuser": request.user.is_superuser,
+        })
+    
 @extend_schema(
     request=UserCreateSerializer,
     responses={200: UserListSerializer(many=True), 201: UserCreateSerializer},
