@@ -84,15 +84,20 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: statsig_celery_worker
+    # Override entrypoint to use just the command
+    entrypoint: []
     command: celery -A app worker -l info
     environment:
       DB_ENGINE: django.db.backends.postgresql
       DB_HOST: db
       DB_PORT: 5432
-      REDIS_HOST: redis
       DB_NAME: ${DB_NAME:-statsig_db}
       DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
     depends_on:
       db:
         condition: service_healthy
