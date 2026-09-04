@@ -103,7 +103,7 @@ docker-compose exec db psql -U postgres -d statsig_db
 \dt
 
 # Query statsig data
-SELECT * FROM core_statsigapplication;
+SELECT * FROM core_StatsigFeatures;
 
 # Exit
 \q

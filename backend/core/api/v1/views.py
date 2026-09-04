@@ -9,7 +9,7 @@ from core.api.v1.serializers import (
     UserCreateSerializer,
     UserListSerializer,
 )
-from core.models import StatsigApplication, SSEEvent
+from core.models import StatsigFeatures, SSEEvent
 from core.tasks import publish_sse_event, email_users
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, BasePermission, IsAdminUser, IsAuthenticated
@@ -143,7 +143,7 @@ class StatsigViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset=(
-            StatsigApplication.objects
+            StatsigFeatures.objects
             .prefetch_related("snapshots")
             .order_by("-updated_at")
         )

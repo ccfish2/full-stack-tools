@@ -51,7 +51,7 @@ The Vite client provides a dashboard for creating users, publishing feature flag
 │   │   │   ├── __init__.py
 │   │   │   ├── 0001_initial.py
 │   │   │   ├── 0002_sseevent.py
-│   │   │   └── 0003_remove_statsigapplication_data_and_more.py
+│   │   │   └── 0003_remove_StatsigFeatures_data_and_more.py
 │   │   ├── models.py
 │   │   ├── tasks.py
 │   │   ├── tests.py
@@ -117,7 +117,7 @@ All routes are defined in `backend/app/urls.py`.
 | --- | --- | --- |
 | `GET` | `/` | Renders the app shell (`index.html`), which mounts the React client |
 | `GET` | `/api/hello/` | Simple health-check endpoint |
-| `GET`, `POST` | `/api/statsigfeatureflag` | CRUD for `StatsigApplication` records (feature flag metadata per product/environment), via a DRF `ModelViewSet` |
+| `GET`, `POST` | `/api/statsigfeatureflag` | CRUD for `StatsigFeatures` records (feature flag metadata per product/environment), via a DRF `ModelViewSet` |
 | `GET`, `POST` | `/api/trigger-events` | Persists an `SSEEvent` row, then queues a Celery task to publish it over SSE. Body: `{"channel": "global", "event_type": "message", "payload": {...}}` |
 | `GET` | `/api/events/?channel=global` | SSE stream (`django-eventstream`). Any client with an open `EventSource` on this URL receives events published via `/api/trigger-events` |
 | `POST` | `/api/publishmsg/` | Queues an email notification task on the `django-tasks` DB-backed queue |

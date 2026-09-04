@@ -7,36 +7,54 @@ class ExampleItem(models.Model):
     def __str__(self):
         return self.name
 
-class StatsigApplication(models.Model):
+from django.db import models
+
+class StatsigFeatures(models.Model):
     class Environment(models.TextChoices):
         PROD = "prod", "Production"
         STAGE = "stage", "Stage"
         DEV = "dev", "Development"
-    last_checksum = models.CharField(max_length=256,default="") # the last snapshot of this product
+    
     environment = models.CharField(
         max_length=10,
         choices=Environment.choices,
         default="stage"
-
     )
-    product = models.CharField(max_length=100,default="stage") # which product this feature flag belongs to 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    metadata = models.JSONField(default=dict)  # Current state of feature flag data
+    checksum = models.CharField(max_length=256, default="")  # Hash of current metadata state
+
+    class Meta:
+        unique_together = ('environment', 'checksum')
 
     def __str__(self):
-        return f"{self.product} ({self.environment})"
+        return f"StatsigFeatures - {self.environment} (checksum: {self.checksum[:8]}...)"
 
-class StatsigMetadataSnapShots(models.Model):
+
+class ProductStatsigSnapShots(models.Model):
+    """
+    Historical snapshots of which StatsigFeatures state each product had at a given time.
+    Multiple products can reference the same feature flag state (checksum).
+    """
     statsig_flag = models.ForeignKey(
-        StatsigApplication, 
+        StatsigFeatures, 
         on_delete=models.CASCADE,
         related_name="snapshots",
     )
-    timestamp = models.DateTimeField() # the created timestamp of this snapshots
-    metadata = models.JSONField() # json blob of all metata
-
+    productid = models.CharField(max_length=100, default="gpu_100")
+    productName = models.CharField(max_length=500, default="gpu model 100 speed 5x memory 5g")
+    timestamp = models.DateTimeField()  # When this product captured/received this feature flag snapshot
+    featureflaglastchecksum = models.CharField(max_length=256, default="")  # Checksum of StatsigFeatures.metadata at this timestamp
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['featureflaglastchecksum']),
+            models.Index(fields=['productid', 'timestamp']),
+        ]
+    
     def __str__(self):
-        return f"{self.statsig_flag.product} @{self.timestamp}"
+        return f"{self.productid} @ {self.timestamp}"
 
 class SSEEvent(models.Model):
     """

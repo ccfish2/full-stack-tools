@@ -1,31 +1,34 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from core.models import StatsigApplication, SSEEvent, StatsigMetadataSnapShots
+from core.models import StatsigFeatures, SSEEvent, ProductStatsigSnapShots
 
 User = get_user_model()
 
-class StatsigMetadataSnapshotSerializer(serializers.ModelSerializer):
+class ProductStatsigSnapShotserializer(serializers.ModelSerializer):
     class Meta:
-        model = StatsigMetadataSnapShots
+        model = ProductStatsigSnapShots
         fields = [
             "id",
             "timestamp",
-            "metadata",
+            "productid",
+            "productName",
+            "featureflaglastchecksum",
+            "statsig_flag",
         ]
 
 class StatsigSerializer(serializers.ModelSerializer):
-    snapshots = StatsigMetadataSnapshotSerializer(many=True, read_only=True)
+    snapshots = ProductStatsigSnapShotserializer(many=True, read_only=True)
 
     class Meta:
-        model = StatsigApplication
+        model = StatsigFeatures
         fields = [
             "id",
-            "product",
             "environment",
-            "last_checksum",
+            "checksum",
             "created_at",
             "updated_at",
-            "snapshots",
+            "metadata",
+            "snapshots", 
         ]
 
 class SSEEventSerializer(serializers.ModelSerializer):

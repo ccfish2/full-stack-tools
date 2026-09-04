@@ -6,7 +6,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-replace-me-with-a-secure-key"
 DEBUG = True
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", "backend", "*"]
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "backend", '0.0.0.0', "*"]
 
 
 # Django applications
