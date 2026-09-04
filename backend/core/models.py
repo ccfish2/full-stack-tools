@@ -7,8 +7,6 @@ class ExampleItem(models.Model):
     def __str__(self):
         return self.name
 
-from django.db import models
-
 class StatsigFeatures(models.Model):
     class Environment(models.TextChoices):
         PROD = "prod", "Production"
