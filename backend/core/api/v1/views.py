@@ -37,6 +37,8 @@ class IsReadOnlyOrAdmin(BasePermission):
             return True
         if request.user.is_staff:
             return True
+        if not request.user or not request.user.is_authenticated:
+            return False  # Should reject here
         token_operations = set((request.auth or {}).get("operations", []))
         return request.method in token_operations
 
@@ -163,6 +165,14 @@ class StatsigViewSet(viewsets.ModelViewSet):
                 })
             queryset = queryset.filter(updated_at=parsed_updated_at)
         return queryset
+
+    # Add this to your ViewSet temporarily to debug
+    def options(self, request, *args, **kwargs):
+        print(f"User: {request.user}")
+        print(f"Is authenticated: {request.user.is_authenticated}")
+        print(f"Is staff: {request.user.is_staff}")
+        return super().options(request, *args, **kwargs)
+
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
