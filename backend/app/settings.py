@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     "django_vite",
     "drf_spectacular",
     "drf_spectacular_sidecar",
+    "django_filters",
 ]
 
 

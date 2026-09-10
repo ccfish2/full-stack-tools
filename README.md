@@ -18,6 +18,22 @@ The Vite client provides a dashboard for creating users, publishing feature flag
   <img src="docs/images/backend-architecture.png" alt="Backend architecture" width="900">
 </p>
 
+### Django-filters snapshot query
+
+The app now includes a dedicated snapshot-search workflow powered by `django-filter`. The backend exposes filterable read endpoints for product snapshot records, allowing queries by product ID, product name, timestamp range, and checksum. The frontend presents the same filters in a query panel and renders matching records in a table, making it easy to narrow down a specific feature-flag snapshot quickly.
+
+<p align="center">
+  <img src="docs/images/django-filters.png" alt="Django filters overview" width="900">
+</p>
+
+<p align="center">
+  <img src="docs/images/django-filters-query.png" alt="Django filters query form" width="900">
+</p>
+
+<p align="center">
+  <img src="docs/images/django-filters-query-result.png" alt="Django filters query results" width="900">
+</p>
+
 ## Project Structure
 
 ```
@@ -104,6 +120,7 @@ The Vite client provides a dashboard for creating users, publishing feature flag
 - **Server-Sent Events**: Real-time updates pushed to clients via `django-eventstream`, backed by Redis
 - **Celery Background Tasks**: SSE events are persisted then published asynchronously by a Celery worker; a separate `django-tasks` (DB-backed) queue handles email jobs
 - **React + Vite Client**: TypeScript/React SSE client, integrated into Django via `django-vite` — Django serves the app shell and injects the built (or, in dev, HMR-proxied) client assets
+- **Django Filters Query Support**: Filter product snapshot records by product ID, product name, timestamp range, and checksum using `django-filter` in the API and query UI
 - **PostgreSQL Database**: Used in Docker; local (non-Docker) development falls back to SQLite unless `DB_ENGINE` is set
 - **Docker Compose**: Containerized backend, database, Redis, and Celery worker for local development
 

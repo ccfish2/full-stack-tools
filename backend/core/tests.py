@@ -115,3 +115,24 @@ class SimpleTest(TestCase):
         self.assertEqual(feature.metadata["production"], "product")
         self.assertTrue(feature.checksum)
         self.assertTrue(ProductStatsigSnapShots.objects.filter(statsig_flag=feature).exists())
+
+    def test_snapshot_query_endpoint_supports_product_name_and_checksum_filters(self):
+        call_command("populate_statsigfeature")
+        feature = StatsigFeatures.objects.filter(environment="prod").first()
+        snapshot = ProductStatsigSnapShots.objects.filter(statsig_flag=feature).first()
+
+        response = self.client.get(
+            "/api/v1/productstatsigsnapshots",
+            {
+                "productid": snapshot.productid,
+                "productName": snapshot.productName,
+                "featureflaglastchecksum": snapshot.featureflaglastchecksum,
+                "timestamp_after": snapshot.timestamp.isoformat(),
+                "timestamp_before": (snapshot.timestamp + __import__("datetime").timedelta(days=1)).isoformat(),
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertGreaterEqual(len(response.json()), 1)
+        self.assertEqual(response.json()[0]["productid"], snapshot.productid)
+        self.assertEqual(response.json()[0]["featureflaglastchecksum"], snapshot.featureflaglastchecksum)
