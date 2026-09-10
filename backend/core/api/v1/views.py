@@ -14,16 +14,17 @@ from drf_spectacular.utils import (extend_schema,
                                    OpenApiParameter,
                                    OpenApiTypes,
                                    extend_schema_view)
-from core.api.v1.serializers import UserCreateSerializer, UserListSerializer
-from core.api.v1.filters import ProductFilter
+from core.api.v1.serializers import ProductStatsigSnapShotserializer, UserCreateSerializer, UserListSerializer
+from core.api.v1.filters import ProductFilter, ProductStatsigSnapshotFilter
 from core.api.v1.serializers import (
     StatsigSerializer,
     SSEEventSerializer,
     UserCreateSerializer,
     UserListSerializer,
 )
-from core.models import StatsigFeatures, SSEEvent
+from core.models import ProductStatsigSnapShots, StatsigFeatures, SSEEvent
 from core.tasks import publish_sse_event, email_users
+from django_filters.rest_framework import DjangoFilterBackend
 
 User = get_user_model()
 
@@ -135,6 +136,13 @@ class SSEEventViewSet(viewsets.ModelViewSet):
     )
 )
 
+class ProductStatsigSnapshotViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = ProductStatsigSnapShots.objects.select_related("statsig_flag").order_by("-timestamp")
+    serializer_class = ProductStatsigSnapShotserializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = ProductStatsigSnapshotFilter
+    permission_classes = [AllowAny]
+
 class StatsigViewSet(viewsets.ModelViewSet):
     """
     POST /api/v1/statsigfeatureflag post product, environment, checksum and associated feature into the system 
@@ -154,6 +162,7 @@ class StatsigViewSet(viewsets.ModelViewSet):
 
         environment = self.request.query_params.get("environment")
         updated_at = self.request.query_params.get("updated_at")
+        checksum = self.request.query_params.get("checksum")
 
         if environment:
             queryset = queryset.filter(environment=environment)
@@ -166,6 +175,9 @@ class StatsigViewSet(viewsets.ModelViewSet):
                     "updated_at": "Use a valid ISO-8601 datetime"
                 })
             queryset = queryset.filter(updated_at=parsed_updated_at)
+
+        if checksum:
+            queryset = queryset.filter(checksum=checksum)
         return queryset
 
     def options(self, request, *args, **kwargs):

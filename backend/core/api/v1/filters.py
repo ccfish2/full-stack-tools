@@ -13,3 +13,16 @@ class ProductFilter(django_filters.FilterSet):
             'productid': ['iexact', 'icontains'],
             'productName': ['iexact', 'icontains'],
         }
+
+class ProductStatsigSnapshotFilter(django_filters.FilterSet):
+    productid = django_filters.CharFilter(field_name='productid', lookup_expr='icontains')
+    productName = django_filters.CharFilter(field_name='productName', lookup_expr='icontains')
+    featureflaglastchecksum = django_filters.CharFilter(
+        field_name='featureflaglastchecksum',
+        lookup_expr='iexact',
+    )
+    timestamp = django_filters.DateTimeFromToRangeFilter(field_name='timestamp')
+
+    class Meta:
+        model = ProductStatsigSnapShots
+        fields = ["productid", "productName", "timestamp", "featureflaglastchecksum"]

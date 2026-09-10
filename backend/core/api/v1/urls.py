@@ -1,14 +1,17 @@
 from django.contrib import admin
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from core.api.v1.views import StatsigViewSet, UserViewSet, SSEEventViewSet, hello, email_notification, current_user, create_user
-import django_eventstream
+from core.api.v1.views import ProductStatsigSnapshotViewSet, StatsigViewSet, UserViewSet, SSEEventViewSet, hello, email_notification, current_user, create_user
 
 router = DefaultRouter(trailing_slash=False)
 
 router.register(r"statsigfeatureflag", 
                 StatsigViewSet, 
                 basename="statsigfeatureflag")
+
+router.register(r"productstatsigsnapshots", 
+                ProductStatsigSnapshotViewSet, 
+                basename="productstatsigsnapshots")
 
 router.register(r"trigger-events", 
                 SSEEventViewSet, 

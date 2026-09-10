@@ -13,7 +13,6 @@ class ProductStatsigSnapShotserializer(serializers.ModelSerializer):
             "productid",
             "productName",
             "featureflaglastchecksum",
-            "statsig_flag",
         ]
 
 class StatsigSerializer(serializers.ModelSerializer):
