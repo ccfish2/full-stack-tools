@@ -1,3 +1,4 @@
+name: fullstack_app
 services:
   # PostgreSQL Database
   db:
