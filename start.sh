@@ -62,7 +62,7 @@ echo -e "${GREEN}✓ All services are running!${NC}"
 echo -e "${GREEN}================================${NC}\n"
 
 echo -e "${YELLOW}Access the application at:${NC}"
-echo -e "  Frontend: ${GREEN}http://localhost:9090${NC}"
+echo -e "  Frontend: ${GREEN}http://localhost:5173${NC}"
 echo -e "  Backend API: ${GREEN}http://localhost:8000${NC}"
 echo -e "  Database: ${GREEN}localhost:5432${NC}\n"
 
