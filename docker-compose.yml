@@ -99,7 +99,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-    - full-stack-tools_statsig_network
+      - isolated
 
   celery_worker:
     build:
@@ -128,7 +128,7 @@ services:
     volumes:
       - ./backend:/app
     networks:
-      - full-stack-tools_statsig_network
+      - isolated
 
 volumes:
   postgres_data:
@@ -137,3 +137,5 @@ volumes:
 networks:
   full-stack-tools_statsig_network:
     driver: bridge
+  isolated:
+    internal: true
