@@ -41,10 +41,32 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      celery_worker:
+        condition: service_started
     volumes:
       - ./backend:/app
     networks:
       - full-stack-tools_statsig_network
+    develop:
+      watch:
+        - action: sync
+          path: ./backend/app
+          target: /app/app
+          initial_sync: true
+          ignore:
+            - node_modules/
+        - action: sync
+          path: ./backend/core
+          target: /app/core
+          initial_sync: true
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./backend/requirements.txt
+        - action: sync+restart
+          path: ./backend/app/settings.py
+          target: /app/app/settings.py
+
 
   # TypeScript Frontend
   frontend:

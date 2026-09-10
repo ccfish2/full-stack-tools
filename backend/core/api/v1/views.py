@@ -1,8 +1,21 @@
 
-from rest_framework import viewsets
-from django.contrib.auth import get_user_model
 from datetime import timedelta
-
+from rest_framework import viewsets
+from rest_framework.decorators import api_view, permission_classes, action
+from rest_framework.permissions import AllowAny, BasePermission, IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
+from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework.viewsets import ViewSet
+from django.contrib.auth import get_user_model
+from django.utils.dateparse import parse_datetime
+from django.contrib.auth import get_user_model
+from drf_spectacular.utils import (extend_schema,
+                                   OpenApiParameter,
+                                   OpenApiTypes,
+                                   extend_schema_view)
+from core.api.v1.serializers import UserCreateSerializer, UserListSerializer
+from core.api.v1.filters import ProductFilter
 from core.api.v1.serializers import (
     StatsigSerializer,
     SSEEventSerializer,
@@ -11,21 +24,8 @@ from core.api.v1.serializers import (
 )
 from core.models import StatsigFeatures, SSEEvent
 from core.tasks import publish_sse_event, email_users
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny, BasePermission, IsAdminUser, IsAuthenticated
-from rest_framework.response import Response
-from django.utils.dateparse import parse_datetime
-from rest_framework.exceptions import ValidationError
-from drf_spectacular.utils import (extend_schema,
-                                   OpenApiParameter,
-                                   OpenApiTypes,
-                                   extend_schema_view)
-from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework.decorators import action
-
 
 User = get_user_model()
-
 
 class IsReadOnlyOrAdmin(BasePermission):
     """Allow authenticated reads; require staff privileges for mutations."""
@@ -41,7 +41,6 @@ class IsReadOnlyOrAdmin(BasePermission):
             return False  # Should reject here
         token_operations = set((request.auth or {}).get("operations", []))
         return request.method in token_operations
-
 
 @extend_schema(
     request={
@@ -135,6 +134,7 @@ class SSEEventViewSet(viewsets.ModelViewSet):
         ]
     )
 )
+
 class StatsigViewSet(viewsets.ModelViewSet):
     """
     POST /api/v1/statsigfeatureflag post product, environment, checksum and associated feature into the system 
@@ -142,6 +142,8 @@ class StatsigViewSet(viewsets.ModelViewSet):
     """
     serializer_class = StatsigSerializer
     permission_classes = [IsReadOnlyOrAdmin]
+    pagination_class = None
+    filterset_class = ProductFilter
 
     def get_queryset(self):
         queryset=(
@@ -166,13 +168,11 @@ class StatsigViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(updated_at=parsed_updated_at)
         return queryset
 
-    # Add this to your ViewSet temporarily to debug
     def options(self, request, *args, **kwargs):
         print(f"User: {request.user}")
         print(f"Is authenticated: {request.user.is_authenticated}")
         print(f"Is staff: {request.user.is_staff}")
         return super().options(request, *args, **kwargs)
-
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -184,13 +184,6 @@ def current_user(request):
         "is_staff": request.user.is_staff,
         "is_superuser": request.user.is_superuser,
     })
-
-from rest_framework.viewsets import ViewSet
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from core.api.v1.serializers import UserCreateSerializer, UserListSerializer
-from django.contrib.auth import get_user_model
 
 User = get_user_model()
 class UserViewSet(ViewSet):
