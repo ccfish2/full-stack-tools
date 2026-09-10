@@ -1,6 +1,9 @@
 from django.contrib.auth import get_user_model
+from django.core.management import call_command
 from rest_framework.test import APIClient
 from django.test import TestCase
+
+from core.models import ProductStatsigSnapShots, StatsigFeatures
 
 User = get_user_model()
 
@@ -100,3 +103,15 @@ class SimpleTest(TestCase):
         )
 
         self.assertEqual(response.status_code, 201)
+
+    def test_populate_statsigfeature_command_creates_flag_and_snapshots(self):
+        call_command("populate_statsigfeature")
+
+        self.assertTrue(StatsigFeatures.objects.filter(environment="prod").exists())
+        feature = StatsigFeatures.objects.get(environment="prod")
+        self.assertEqual(feature.metadata["status"], "approved")
+        self.assertEqual(feature.metadata["environment"], "prod")
+        self.assertEqual(feature.metadata["version"], "v1")
+        self.assertEqual(feature.metadata["production"], "product")
+        self.assertTrue(feature.checksum)
+        self.assertTrue(ProductStatsigSnapShots.objects.filter(statsig_flag=feature).exists())
