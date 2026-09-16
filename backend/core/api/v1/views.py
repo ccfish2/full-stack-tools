@@ -32,14 +32,17 @@ class IsReadOnlyOrAdmin(BasePermission):
     """Allow authenticated reads; require staff privileges for mutations."""
 
     def has_permission(self, request, view):
+        # non-authenticated, get denied
         if not request.user or not request.user.is_authenticated:
             return False
+
+        # all user could read
         if request.method in ("GET", "HEAD", "OPTIONS"):
             return True
+        # staff/admin could mutate
         if request.user.is_staff:
             return True
-        if not request.user or not request.user.is_authenticated:
-            return False  # Should reject here
+        # other user permission based on token
         token_operations = set((request.auth or {}).get("operations", []))
         return request.method in token_operations
 
@@ -203,7 +206,7 @@ class UserViewSet(ViewSet):
     /api/v1/users/           - list all users (GET), create user (POST)
     /api/v1/users/current/   - get current user (GET)
     """
-    queryset = User.objects.all()  # ← Add this
+    queryset = User.objects.all() 
     serializer_class = UserListSerializer
     permission_classes = [IsAdminUser]
     
