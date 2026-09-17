@@ -4,7 +4,21 @@ from core.models import StatsigFeatures, SSEEvent, ProductStatsigSnapShots
 
 User = get_user_model()
 
+class StatsigSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StatsigFeatures
+        fields = [
+            "id",
+            "name",
+            "environment",
+            "checksum",
+            "created_at",
+            "updated_at",
+            "metadata",
+        ]
+
 class ProductStatsigSnapShotserializer(serializers.ModelSerializer):
+    snapshots = StatsigSerializer(many=True, read_only=True)
     class Meta:
         model = ProductStatsigSnapShots
         fields = [
@@ -13,21 +27,6 @@ class ProductStatsigSnapShotserializer(serializers.ModelSerializer):
             "productid",
             "productName",
             "featureflaglastchecksum",
-        ]
-
-class StatsigSerializer(serializers.ModelSerializer):
-    snapshots = ProductStatsigSnapShotserializer(many=True, read_only=True)
-
-    class Meta:
-        model = StatsigFeatures
-        fields = [
-            "id",
-            "environment",
-            "checksum",
-            "created_at",
-            "updated_at",
-            "metadata",
-            "snapshots", 
         ]
 
 class SSEEventSerializer(serializers.ModelSerializer):

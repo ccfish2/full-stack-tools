@@ -18,10 +18,11 @@ class StatsigFeatures(models.Model):
         choices=Environment.choices,
         default="stage"
     )
+    name = models.CharField(max_length=256, default="", blank=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    metadata = models.JSONField(default=dict)  # Current state of feature flag data
-    checksum = models.CharField(max_length=256, default="")  # Hash of current metadata state
+    metadata = models.JSONField(default=dict, blank=False)  # Current state of feature flag data
+    checksum = models.CharField(max_length=256, default="", blank=False)  # Hash of current metadata state
 
     class Meta:
         unique_together = ('environment', 'checksum')
