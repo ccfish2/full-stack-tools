@@ -282,3 +282,21 @@ def email_notification(request):
         "message": "Email task has been queued",
         "task_id": getattr(task, "id", None),
     })
+
+
+# wizard_form
+from core.forms import GuestDetailsForm,BusinessDetailsForm, BookingDetailsForm
+from formtools.wizard.views import SessionWizardView
+from django.http import HttpResponse
+
+class BookingWizardView(SessionWizardView):
+    form_list = [
+        ("guest", GuestDetailsForm),
+        ("business", BusinessDetailsForm),
+        ('booking', BookingDetailsForm)
+    ]
+    template_name = "core/booking_wizard.html"
+
+    def done(self, form_list, **kwargs):
+        return HttpResponse('Form submitted')
+# end of wizard_form

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import useSWR from "swr";
 import { createUser, getCurrentUser, login, logout, type CurrentUser } from "./api/client";
 import { useSSE } from "./useSSE";
@@ -8,6 +8,7 @@ import {
   getFeatureFlags,
   getSnapshotRows,
   triggerTestEvent,
+  getFeatures,
   type SnapshotRow,
   type StatsigFeatureDetails,
   type StatsigFlag,
@@ -43,11 +44,30 @@ export default function App() {
   const [featureModalOpen, setFeatureModalOpen] = useState(false);
   const [featureDetailLoading, setFeatureDetailLoading] = useState(false);
 
+  const [showFeatureList, setShowFeatureList] = useState(false);
+  const [havingfeatures, setFeatures] = useState<StatsigFeatureDetails[]>([]);
+  const [selectedhavingfeatures, sethavingfeatures] = useState("");
+  
   const { data: flags, isLoading, error, mutate } = useSWR<StatsigFlag[]>(
     user ? FLAGS_SWR_KEY : null,
     getFeatureFlags,
   );
   const { state, lastEvent } = useSSE("global", FLAGS_SWR_KEY);
+
+
+  useEffect(() => {
+  if (!showFeatureList) {
+    return;
+  }
+
+  void getFeatures()
+    .then((data) => {
+      setFeatures(data);
+    })
+    .catch((error) => {
+      console.error("Failed to load features:", error);
+    });
+}, [showFeatureList]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -124,6 +144,7 @@ export default function App() {
     }
   }
 
+ 
   function updateSnapshotFilter(field: keyof typeof initialSnapshotFilters, value: string) {
     setSnapshotFilters((current) => ({
       ...current,
@@ -151,13 +172,16 @@ export default function App() {
   }
 
   return (
+
     <main className="app-shell">
+
       <header className="page-header">
         <div>
           <p className="eyebrow">Operations console</p>
           <h1>Feature flag control panel</h1>
           <p className="page-intro">Manage access, publish flag snapshots, and watch events arrive in real time.</p>
         </div>
+      
         <div className="session-area">
           {user ? (
             <>
@@ -173,10 +197,18 @@ export default function App() {
           )}
         </div>
       </header>
-
       {submitError && <p className="error-banner" role="alert">{submitError}</p>}
 
       <div className="page-actions">
+
+        <button
+          className="button button-accent button-wide"
+          type="button"
+          onClick={() => setShowFeatureList(true)}
+        >
+          Feature Lists
+        </button>
+
         <button
           className="button button-accent button-wide"
           type="button"
@@ -192,6 +224,8 @@ export default function App() {
           Query feature flag
         </button>
       </div>
+
+      
 
       <div className="dashboard-grid">
         <section className="panel user-panel">
@@ -245,6 +279,29 @@ export default function App() {
           </div>
         </section>
       </div>
+
+<select
+  id="feature-list"
+  value={selectedhavingfeatures}
+  onChange={(e) => {
+    const selectedFeature = e.target.value;
+
+    sethavingfeatures(selectedFeature);
+
+    if (selectedFeature === "wizard-forms") {
+      // Fix me, make this as one configuration item in vite.json
+      window.location.href = "http://localhost:8000/api/v1/wizard/";
+    }
+  }}
+>
+  <option value="">Select a feature</option>
+
+  {havingfeatures.map((feature) => (
+    <option key={feature.id} value={feature.name}>
+      {feature.name}
+    </option>
+  ))}
+</select>
 
       {showSnapshotQuery && (
         <section className="panel query-panel">

@@ -28,6 +28,7 @@ class Command(BaseCommand):
                     "release_channel": "stable",
                     "visibility": "internal",
                     "updated_by": "release-bot",
+                    "name": "wizard-forms",
                 },
                 "products": [
                     {
@@ -48,6 +49,7 @@ class Command(BaseCommand):
                     "version": "v2",
                     "production": "staging",
                     "rollout": 65,
+                    "name": "data-feature-2",
                     "owner": "qa-team",
                     "release_channel": "beta",
                     "visibility": "customer-facing",
@@ -76,6 +78,7 @@ class Command(BaseCommand):
                     "release_channel": "dev",
                     "visibility": "internal",
                     "updated_by": "developer",
+                    "name": "data-feature-3",
                 },
                 "products": [
                     {

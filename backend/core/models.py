@@ -18,10 +18,11 @@ class StatsigFeatures(models.Model):
         choices=Environment.choices,
         default="stage"
     )
+    name = models.CharField(max_length=256, default="", blank=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    metadata = models.JSONField(default=dict)  # Current state of feature flag data
-    checksum = models.CharField(max_length=256, default="")  # Hash of current metadata state
+    metadata = models.JSONField(default=dict, blank=False)  # Current state of feature flag data
+    checksum = models.CharField(max_length=256, default="", blank=False)  # Hash of current metadata state
 
     class Meta:
         unique_together = ('environment', 'checksum')
@@ -70,3 +71,36 @@ class SSEEvent(models.Model):
 
     def __str__(self):
         return f"SSEEvent({self.channel}, {self.event_type}) #{self.id}"
+
+## wizard-feature
+class Business(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+class Guest(models.Model):
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    email = models.EmailField()
+    phone = models.CharField(max_length=12)
+    business = models.ForeignKey(Business, on_delete=models.CASCADE, null=True)
+
+    @property
+    def full_name(self):
+        return self.full_name
+
+class Booking(models.Model):
+    class RoomType(models.TextChoices):
+        SINGLE="Single"
+        DOUBLE="Double"
+        FAMILY="Family"
+    guest = models.ForeignKey(Guest, on_delete=models.CASCADE, related_name="bookings")
+    room_type = models.CharField(max_length=10, choices=RoomType.choices)
+    date = models.DateField()
+    number_of_night = models.PositiveIntegerField()
+
+    def __str__(self):
+        return f"{self.guest.full_name}: {self.number_of_night} nights in {self.room_type} room"
+
+## end of wizard-feature

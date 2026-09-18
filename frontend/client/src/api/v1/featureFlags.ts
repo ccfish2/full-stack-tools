@@ -18,12 +18,12 @@ export type SnapshotRow = {
 
 export type StatsigFeatureDetails = {
   id: number;
+  name: string;
   environment: string;
   checksum: string;
   created_at: string;
   updated_at: string;
   metadata: Record<string, unknown>;
-  snapshots: SnapshotRow[];
 };
 
 export const getFeatureFlags = () =>
@@ -70,3 +70,9 @@ export const triggerTestEvent = () =>
       at: new Date().toISOString(),
     },
   });
+
+export const getFeatures = () => {
+  return fetcher<StatsigFeatureDetails[]>(
+    `/v1/statsigfeatureflag`,
+  );
+};
