@@ -27,6 +27,7 @@ class ProductStatsigSnapShotserializer(serializers.ModelSerializer):
             "productid",
             "productName",
             "featureflaglastchecksum",
+            'snapshots',
         ]
 
 class SSEEventSerializer(serializers.ModelSerializer):
