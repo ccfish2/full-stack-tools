@@ -28,8 +28,11 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "drf_spectacular_sidecar",
     "django_filters",
+    "crispy_forms",
+    "formtools",
 ]
 
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 # Request handling and project entry points
 MIDDLEWARE = [

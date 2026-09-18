@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from core.api.v1.views import ProductStatsigSnapshotViewSet, StatsigViewSet, UserViewSet, SSEEventViewSet, hello, email_notification, current_user, create_user
+from core.api.v1.views import ProductStatsigSnapshotViewSet, StatsigViewSet, UserViewSet, SSEEventViewSet, hello, email_notification, current_user, create_user, BookingWizardView
 
 router = DefaultRouter(trailing_slash=False)
 
@@ -29,4 +29,7 @@ urlpatterns = [
 
     # include router URLs
     path("", include(router.urls)),
+
+    # include wizard form feature function
+    path("wizard/", BookingWizardView.as_view()),
 ]

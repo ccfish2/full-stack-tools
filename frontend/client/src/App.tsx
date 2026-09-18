@@ -280,25 +280,28 @@ export default function App() {
         </section>
       </div>
 
-    {showFeatureList && (
-      <div className="feature-selector">
-        <label htmlFor="feature-list">Feature</label>
+<select
+  id="feature-list"
+  value={selectedhavingfeatures}
+  onChange={(e) => {
+    const selectedFeature = e.target.value;
 
-        <select
-          id="feature-list"
-          value={selectedhavingfeatures}
-          onChange={(e) => sethavingfeatures(e.target.value)}
-        >
-          <option value="">Select a feature</option>
+    sethavingfeatures(selectedFeature);
 
-          {havingfeatures.map((feature) => (
-            <option key={feature.id} value={feature.name}>
-              {feature.name}
-            </option>
-          ))}
-        </select>
-      </div>
-    )}
+    if (selectedFeature === "wizard-forms") {
+      // Fix me, make this as one configuration item in vite.json
+      window.location.href = "http://localhost:8000/api/v1/wizard/";
+    }
+  }}
+>
+  <option value="">Select a feature</option>
+
+  {havingfeatures.map((feature) => (
+    <option key={feature.id} value={feature.name}>
+      {feature.name}
+    </option>
+  ))}
+</select>
 
       {showSnapshotQuery && (
         <section className="panel query-panel">
