@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     "django_eventstream",
     "django_tasks_db",
     "core",
+    "reports",
     "rest_framework",
     "django_browser_reload",
     "django_vite",
