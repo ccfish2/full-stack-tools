@@ -1,6 +1,6 @@
 // src/App.tsx
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { Navbar } from "./components/Navbar";
+import { Navbar } from "./components/navabar.tsx";
 import { FeatureFlagPage } from "./pages/core/FeatureFlag.tsx";
 import { ReportsPage } from "./pages/reports/ReportsList.tsx";
 import "./css/styles.css";

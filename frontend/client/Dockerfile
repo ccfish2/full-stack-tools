@@ -3,7 +3,9 @@ FROM node:18-alpine
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install
+
+# Clean install - fixes architecture mismatches between macOS and Linux
+RUN npm ci --force || npm install --force
 
 COPY . .
 

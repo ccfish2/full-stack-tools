@@ -1,4 +1,6 @@
 // src/api/reports/reports.ts
+import { fetcher, post } from "../client";
+
 export interface Report {
   id: number;
   name: string;
@@ -7,13 +9,13 @@ export interface Report {
 }
 
 export async function getReports(): Promise<Report[]> {
-  const response = await fetch("/api/reports/");
-  if (!response.ok) throw new Error("Failed to fetch reports");
-  return response.json();
+  const response = await fetcher("/reports/");
+  if (response.status >= 400) throw new Error("Failed to fetch reports");
+  return await response;  
 }
 
 export async function getReportDetail(id: number): Promise<Report> {
-  const response = await fetch(`/api/reports/${id}/`);
+  const response = await fetcher(`/reports/${id}/`);
   if (!response.ok) throw new Error("Failed to fetch report");
-  return response.json();
+  return await response;  
 }

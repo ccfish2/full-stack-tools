@@ -9,8 +9,13 @@ A full-stack prototype: a Django backend (REST API + Server-Sent Events + Celery
 The Vite client provides a dashboard for creating users, publishing feature flag records, and monitoring the live SSE connection.
 
 <p align="center">
-  <img src="docs/images/frontend-dashboard.png" alt="Frontend dashboard" width="900">
+  <img src="docs/images/name-tagged-url.png" alt="Frontend dashboard" width="900">
 </p>
+
+<p align="center">
+  <img src="docs/images/clickable-link.png" alt="Frontend dashboard" width="900">
+</p>
+
 
 ### Backend architecture
 
@@ -123,6 +128,8 @@ The app now includes a dedicated snapshot-search workflow powered by `django-fil
 - **Django Filters Query Support**: Filter product snapshot records by product ID, product name, timestamp range, and checksum using `django-filter` in the API and query UI
 - **PostgreSQL Database**: Used in Docker; local (non-Docker) development falls back to SQLite unless `DB_ENGINE` is set
 - **Docker Compose**: Containerized backend, database, Redis, and Celery worker for local development
+- **Namespaced URL**: Extend Frontend to use namepsaced url and get_absolute_url 
+
 
 > Note: `frontend/` also contains a legacy Express/TypeScript server (`frontend/src/server.ts`). It's not part of the current architecture — its service is commented out in `docker-compose.yml` — and is kept around from an earlier iteration of the project.
 
