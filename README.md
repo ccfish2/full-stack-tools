@@ -39,6 +39,10 @@ The app now includes a dedicated snapshot-search workflow powered by `django-fil
   <img src="docs/images/django-filters-query-result.png" alt="Django filters query results" width="900">
 </p>
 
+<p align="center">
+  <img src="docs/images/validate-phonenumber.png" alt="Django filters query results" width="900">
+</p>
+
 ## Project Structure
 
 ```

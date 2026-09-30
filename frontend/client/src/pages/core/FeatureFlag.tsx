@@ -408,9 +408,9 @@ export function FeatureFlagPage() {
 
           sethavingfeatures(selectedFeature);
 
-          if (selectedFeature === "wizard-forms") {
+          if (selectedFeature === "wizard_forms") {
             // Fix me, make this as one configuration item in vite.json
-            window.location.href = "http://localhost:8000/api/v1/wizard/";
+            window.location.href = "http://127.0.0.1:8000/api/v1/wizard/";
           }
         }}
       >

@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "django_filters",
     "crispy_forms",
     "formtools",
+    "phonenumber_field",
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'

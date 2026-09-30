@@ -18,3 +18,5 @@ django-formtools==2.7
 django-crispy-forms==2.7
 
 django-extensions==4.1
+django-phonenumber-field==8.5.0
+phonenumbers==9.0.17

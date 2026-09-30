@@ -4,7 +4,7 @@
 
 export const API_BASE =
   import.meta.env.VITE_API_BASE ||
-  "http://localhost:8000/api";
+  "http://127.0.0.1:8000/api";
 const ACCESS_TOKEN_KEY = "access_token";
 
 export function logout() {
