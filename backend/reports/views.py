@@ -17,9 +17,7 @@ def index(request):
     {"name": "Chicago", "population": "7,000,000", "country": "USA"},
     {"name": "Tokyo", "population": "33,000,000", "country": "Japan"},
     ]
-
     context = {'cities': cities}
-
 #     books = [
 #     {"title": "1984", "author": {"name": "George", "age": 45}},
 #     {"title": "Timequake", "author": {"name": "Kurt", "age": 75}},

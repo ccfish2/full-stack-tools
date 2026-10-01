@@ -1,12 +1,15 @@
 
 
 {% block content %}
+
 <url>
+    
+   
     {% for city in cities|dictsortreversed:"name" %}
     <!-- {% for book in books|dictsort:"author.age" %}
     * {{ book.title }} ({{ book.author.name }})
     {% endfor %} -->
-    <li>{{ city.name }} - {{ city.population }}</li>
+    <li> {{ city.name }}  :::  {{ city.population }} </li>
     {% endfor %}
 </url>
 
