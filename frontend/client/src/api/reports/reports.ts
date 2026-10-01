@@ -1,12 +1,14 @@
 // src/api/reports/reports.ts
 import { fetcher, post } from "../client";
 
-export interface Report {
-  id: number;
-  name: string;
-  description: string;
-  created_at: string;
-}
+// export interface Report {
+//   id: number;
+//   name: string;
+//   description: string;
+//   created_at: string;
+// }
+
+export type Report = { name: string; population: string; country: string; };
 
 export async function getReports(): Promise<Report[]> {
   const response = await fetcher("/reports/");
