@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-
+import dj_database_url
 
 # Project paths and security
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -69,18 +69,35 @@ TEMPLATES = [
 ]
 
 
-# Database: SQLite locally, PostgreSQL when DB_ENGINE is configured.
-if os.getenv("DB_ENGINE"):
-    DATABASES = {
-        "default": {
-            "ENGINE": os.getenv("DB_ENGINE"),
-            "NAME": os.getenv("DB_NAME", "statsig_db"),
-            "USER": os.getenv("DB_USER", "postgres"),
-            "PASSWORD": os.getenv("DB_PASSWORD", "postgres"),
-            "HOST": os.getenv("DB_HOST", "localhost"),
-            "PORT": os.getenv("DB_PORT", "5432"),
+BASE_DIR = Path(__file__).resolve().parent.parent
+DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
+if DATABASE_URL:
+    try:
+        db_config = dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=os.getenv("DB_SSL_REQUIRE", "false").lower()
+            in {"1", "true", "yes"},
+        )
+
+        # Accept PostgreSQL URLs only.
+        if (
+            db_config["ENGINE"] != "django.db.backends.postgresql"
+            or not db_config.get("NAME")
+            or not db_config.get("HOST")
+        ):
+            raise ValueError("Invalid PostgreSQL DATABASE_URL")
+
+        DATABASES = {"default": db_config}
+
+    except (ValueError, KeyError):
+        # Empty or invalid URL: use local SQLite.
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.sqlite3",
+                "NAME": BASE_DIR / "db.sqlite3",
+            }
         }
-    }
 else:
     DATABASES = {
         "default": {
