@@ -5,10 +5,12 @@
 export const API_BASE =
   import.meta.env.VITE_API_BASE ||
   "http://127.0.0.1:8000/api";
-const ACCESS_TOKEN_KEY = "access_token";
+const ACCESS_TOKEN_KEY = "accessToken";
+const REFRESH_TOKEN_KEY = "refreshToken";
 
 export function logout() {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
 }
 
 export type CurrentUser = {
@@ -21,6 +23,7 @@ export type CurrentUser = {
 
 function authHeaders(): HeadersInit {
   const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
@@ -44,6 +47,7 @@ export async function login(username: string, password: string) {
 
   const tokens = await res.json() as { access: string; refresh: string };
   localStorage.setItem(ACCESS_TOKEN_KEY, tokens.access);
+  localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh);
   return tokens;
 }
 

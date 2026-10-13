@@ -1,7 +1,8 @@
 // src/pages/core/FeatureFlag.tsx
 import { useEffect, useState } from "react";
 import useSWR from "swr";
-import { createUser, getCurrentUser, login, logout, type CurrentUser } from "../../api/client";
+import { createUser, login } from "../../api/client";
+import { useAuth } from "../../auth/AuthContext";
 import { useSSE } from "../../useSSE";
 import {
   createFeatureFlag,
@@ -27,7 +28,7 @@ const initialSnapshotFilters = {
 export function FeatureFlagPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [user, setUser] = useState<CurrentUser | null>(null);
+  const { user, loading: authLoading, refreshUser, logout } = useAuth();
   const [product, setProduct] = useState("");
   const [environment, setEnvironment] = useState("dev");
   const [checksum, setChecksum] = useState("");
@@ -74,7 +75,7 @@ export function FeatureFlagPage() {
 
     try {
       await login(username, password);
-      setUser(await getCurrentUser());
+      await refreshUser();
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : String(err));
     }
@@ -179,7 +180,9 @@ export function FeatureFlagPage() {
         </div>
 
         <div className="session-area">
-          {user ? (
+          {authLoading ? (
+            <span>Restoring session…</span>
+          ) : user ? (
             <>
               <span className="signed-in">
                 {user.username} <small>{user.is_staff ? "admin" : "read-only"}</small>
@@ -187,10 +190,7 @@ export function FeatureFlagPage() {
               <button
                 className="button button-quiet"
                 type="button"
-                onClick={() => {
-                  logout();
-                  setUser(null);
-                }}
+                onClick={logout}
               >
                 Log out
               </button>
