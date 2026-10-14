@@ -379,6 +379,12 @@ jobs:
       # "dolphin" namespace, so the application Service must also
       # be in dolphin.
       # ------------------------------------------------------------
+      - name: Verify chart repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          helm repo update fullstackapp
+          helm show chart "${CHART_NAME}" --version 0.2.1
 
       - name: Install chart
         shell: bash
