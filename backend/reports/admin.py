@@ -1,7 +1,8 @@
 from django.contrib import admin
-from reports.models import Report, Rating, Sale
+from reports.models import Report, Rating, Sale, Organization
 
 # Register your models here.
 admin.site.register(Report)
 admin.site.register(Rating)
 admin.site.register(Sale)
+admin.site.register(Organization)

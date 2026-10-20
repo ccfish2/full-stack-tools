@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "crispy_forms",
     "formtools",
     "phonenumber_field",
+    "django_lifecycle_checks",
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
@@ -213,3 +214,5 @@ TASKS = {
         "QUEUES": ["default", "emails"],
     }
 }
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
