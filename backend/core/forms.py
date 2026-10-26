@@ -1,6 +1,15 @@
 from django import forms 
 from core.models import Guest, Business,Booking
+from django.core.validators import EmailValidator
+from django.core.exceptions import ValidationError
 
+def validate_email(email):
+    if not EmailValidator(email):
+        raise ValidationError(
+            _("%(email)s is not a valid email"),
+            params={"email": email},
+        )
+    
 class GuestDetailsForm(forms.ModelForm):
     BOOL_CHOICES = [(True, "Yes"), (False, "No")]
 
@@ -8,7 +17,7 @@ class GuestDetailsForm(forms.ModelForm):
         widget=forms.RadioSelect(choices=BOOL_CHOICES),
         required=False,
     )
-
+    email = forms.EmailField(validators=[validate_email])
     class Meta:
         model = Guest
         fields = (

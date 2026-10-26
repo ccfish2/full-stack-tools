@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 
 class ExampleItem(models.Model):
     name = models.CharField(max_length=128)
@@ -6,6 +7,11 @@ class ExampleItem(models.Model):
 
     def __str__(self):
         return self.name
+
+def feature_name_validator(f_name):
+    if not isinstance(f_name, str) or len(f_name) > 20:
+        raise ValidationError(_("%(f_name)s is not a valid feature"),
+                    params={"f_name": f_name},)
 
 class StatsigFeatures(models.Model):
     class Environment(models.TextChoices):
@@ -18,7 +24,7 @@ class StatsigFeatures(models.Model):
         choices=Environment.choices,
         default="stage"
     )
-    name = models.CharField(max_length=256, default="", blank=False)
+    name = models.CharField(max_length=256, default="", blank=False, validators=[feature_name_validator])
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     metadata = models.JSONField(default=dict, blank=False)  # Current state of feature flag data

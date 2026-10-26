@@ -49,6 +49,7 @@ def run():
         output_field=CharField(),
     )
 )
+    pprint(annotated.explain)
     pprint(annotated[0].number_of_entries)
 
 if __name__ == "__main__":
