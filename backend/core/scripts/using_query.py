@@ -3,10 +3,22 @@ import sys
 from pathlib import Path
 from pprint import pprint
 import datetime
-
+from datetime import timedelta
+from django.utils import timezone
 import django
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
+
+def run2():
+    from core.models import ProductStatsigSnapShots, StatsigFeatures
+    # features = StatsigFeatures.objects.filter(checksum='62f1374a4fff4756e3cb3d59447d55e06863569153b4a83bbf298b3e71133c75').delete()
+    # pprint(features)
+    # pprint(connection.queries)
+
+    pprint("----***----")
+    update = StatsigFeatures.objects.all().update(updated_at=timezone.now() - timedelta(days=20))
+    pprint(update)
+    pprint(connection.queries)
 
 def run():
     from core.models import ProductStatsigSnapShots, StatsigFeatures
@@ -58,4 +70,4 @@ if __name__ == "__main__":
 
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app.settings")
     django.setup()
-    run()
+    run2()
