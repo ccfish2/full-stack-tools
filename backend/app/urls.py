@@ -5,13 +5,14 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from core.api.v1.views import grant_user_token
 from core.views import index
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-
+from django.conf.urls.static import static
+from django.conf import settings
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
-
 
 urlpatterns = [
     path("", index),
     path("admin/", admin.site.urls),
+    path("__debug__/", include("debug_toolbar.urls")),
     path('api/reports/', include('reports.urls')),
     path("api_auth/", include("rest_framework.urls")),
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
@@ -41,3 +42,4 @@ urlpatterns += [
 ]
 
 urlpatterns += staticfiles_urlpatterns()
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
