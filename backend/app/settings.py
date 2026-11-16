@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "drf_spectacular_sidecar",
     "django_filters",
     "crispy_forms",
+    "crispy_bootstrap4",
     "formtools",
     "phonenumber_field",
     "django_lifecycle_checks",
@@ -37,6 +38,7 @@ INSTALLED_APPS = [
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
 
 # Request handling and project entry points
 MIDDLEWARE = [
